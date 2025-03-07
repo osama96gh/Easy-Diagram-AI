@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagmarm Builder</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Load mermaid.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Diagmarm Builder</h1>
+            <p>Create and visualize diagrams using mermaid.js</p>
+        </header>
+        
+        <main>
+            <div class="editor-panel">
+                <h2>Code Editor</h2>
+                <div class="toolbar">
+                    <button id="clear-btn">Clear</button>
+                    <button id="copy-btn">Copy Code</button>
+                </div>
+                <textarea id="code-editor" placeholder="Enter your mermaid code here...">graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B</textarea>
+            </div>
+            
+            <div class="render-panel">
+                <h2>Diagram Preview</h2>
+                <div id="error-display"></div>
+                <div id="diagram-output"></div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Diagmarm Builder v0.0.1 | <a href="https://mermaid.js.org/intro/" target="_blank">Mermaid.js Documentation</a></p>
+        </footer>
+    </div>
+
+    <script src="js/mermaid-init.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -36,12 +36,31 @@
             </div>
         </main>
         
+        <div class="ai-assistant-panel">
+            <h2>AI Assistant</h2>
+            <p>Modify your diagram using natural language</p>
+            <div class="ai-input-container">
+                <input type="text" id="ai-input" placeholder="Describe the changes you want to make...">
+                <button id="ai-submit-btn">Update Diagram</button>
+            </div>
+            <div id="ai-status" class="ai-status"></div>
+            <div class="ai-examples">
+                <p>Example requests:</p>
+                <ul>
+                    <li>"Add a node for error handling"</li>
+                    <li>"Change the 'Debug' node to 'Troubleshoot'"</li>
+                    <li>"Add a connection from Start to Great"</li>
+                </ul>
+            </div>
+        </div>
+        
         <footer>
-            <p>Diagmarm Builder v0.0.1 | <a href="https://mermaid.js.org/intro/" target="_blank">Mermaid.js Documentation</a></p>
+            <p>Diagmarm Builder v0.1.0 | <a href="https://mermaid.js.org/intro/" target="_blank">Mermaid.js Documentation</a></p>
         </footer>
     </div>
 
     <script src="js/mermaid-init.js"></script>
+    <script src="js/ai-client.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

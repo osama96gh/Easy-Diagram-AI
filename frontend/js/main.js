@@ -79,7 +79,7 @@ function handleTabKey(e) {
 }
 
 /**
- * Handles AI diagram update requests
+ * Handles chat box diagram update requests
  * @returns {Promise<void>}
  */
 async function handleAIRequest() {
@@ -129,7 +129,7 @@ async function handleAIRequest() {
 }
 
 /**
- * Shows a status message in the AI assistant panel
+ * Shows a status message in the chat box
  * @param {string} type - The type of status (loading, error, success)
  * @param {string} message - The message to display
  */
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearButton.addEventListener('click', clearEditor);
     copyButton.addEventListener('click', copyCode);
     
-    // AI Assistant event listeners
+    // Chat Box event listeners
     aiSubmitButton.addEventListener('click', handleAIRequest);
     aiInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {

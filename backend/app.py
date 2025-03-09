@@ -15,7 +15,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000")
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000,http://localhost:3000")
 CORS(app, resources={r"/api/*": {"origins": cors_origins.split(",")}})
 
 @app.route("/api/update-diagram", methods=["POST"])

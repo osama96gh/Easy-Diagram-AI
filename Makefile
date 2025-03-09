@@ -6,9 +6,10 @@ PIP := $(PYTHON) -m pip
 VENV := backend/.venv
 VENV_ACTIVATE := $(VENV)/bin/activate
 BACKEND_PORT := 5000
-FRONTEND_PORT := 8000
+FRONTEND_PORT := 3000
 SUPERVISOR := $(VENV)/bin/supervisord
 SUPERVISORCTL := $(VENV)/bin/supervisorctl
+NPM := npm
 
 # Default target
 .PHONY: all
@@ -16,7 +17,7 @@ all: setup run
 
 # Setup the project
 .PHONY: setup
-setup: setup-backend setup-supervisor
+setup: setup-backend setup-frontend setup-supervisor
 
 # Setup the backend
 .PHONY: setup-backend
@@ -27,6 +28,13 @@ setup-backend:
 	fi
 	@. $(VENV_ACTIVATE) && $(PIP) install -r backend/requirements.txt
 	@echo "Backend setup complete."
+
+# Setup the React frontend
+.PHONY: setup-frontend
+setup-frontend:
+	@echo "Setting up React frontend..."
+	@cd frontend-react && $(NPM) install
+	@echo "React frontend setup complete."
 
 # Setup supervisor
 .PHONY: setup-supervisor
@@ -43,11 +51,11 @@ run-backend:
 	@echo "Starting backend server on port $(BACKEND_PORT)..."
 	@. $(VENV_ACTIVATE) && cd backend && $(PYTHON) app.py
 
-# Run the frontend server
+# Run the React frontend server
 .PHONY: run-frontend
 run-frontend:
-	@echo "Starting frontend server on port $(FRONTEND_PORT)..."
-	@cd frontend && $(PYTHON) -m http.server $(FRONTEND_PORT)
+	@echo "Starting React frontend server on port $(FRONTEND_PORT)..."
+	@cd frontend-react && $(NPM) start
 
 # Run both servers (requires two terminal windows)
 .PHONY: run
@@ -116,9 +124,10 @@ help:
 	@echo "  all            : Setup and run the application (default)"
 	@echo "  setup          : Setup the project"
 	@echo "  setup-backend  : Setup the backend (create venv, install dependencies)"
+	@echo "  setup-frontend : Setup the React frontend (install npm dependencies)"
 	@echo "  setup-supervisor : Setup supervisor for background services"
 	@echo "  run-backend    : Run the backend server in the foreground"
-	@echo "  run-frontend   : Run the frontend server in the foreground"
+	@echo "  run-frontend   : Run the React frontend server in the foreground"
 	@echo "  run            : Instructions to run both servers"
 	@echo "  start          : Start both services in the background using supervisor"
 	@echo "  stop           : Stop all background services"

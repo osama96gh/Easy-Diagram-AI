@@ -10,23 +10,23 @@ To provide an intuitive interface for creating and visualizing mermaid diagrams,
 
 ### 1.2 Core Objectives for v0.1.0
 
-- Maintain the simple, functional web interface for mermaid diagram creation
-- Continue to provide real-time rendering of mermaid diagrams
+- Provide a simple, functional web interface for mermaid diagram creation
+- Deliver real-time rendering of mermaid diagrams
 - Support all diagram types available in mermaid.js
-- Ensure responsive design for various screen sizes
+- Ensure all interface components are always visible (no scrolling required)
 - **Add AI-powered diagram modification through natural language requests**
 - **Integrate with LLM API for processing natural language to mermaid code**
 
 ## 2. System Architecture for v0.1.0
 
-The architecture now includes an AI component with separate frontend and backend services:
+The architecture includes an AI component with separate frontend and backend services:
 
 ### 2.1 Key Components
 
 1. **Frontend**
-   - **Code Editor**: A text area where users can write mermaid syntax
-   - **Diagram Renderer**: A component that uses mermaid.js to render the diagram from the provided code
-   - **AI Assistant UI**: The user interface for entering natural language requests
+   - **Code Editor**: A text area where users can write mermaid syntax (positioned on the left)
+   - **Diagram Renderer**: A component that uses mermaid.js to render the diagram from the provided code (positioned on the right, largest section)
+   - **Chat Box**: A simple input field for entering natural language commands (positioned at the bottom)
 
 ### 2.2 Component Interaction
 
@@ -47,11 +47,11 @@ The architecture now includes an AI component with separate frontend and backend
 
 ### 2.3 Data Flow
 
-1. User enters mermaid code in the editor
+1. User enters mermaid code in the editor (left panel)
 2. The code is passed to the mermaid.js renderer
-3. The rendered diagram is displayed to the user
-4. User enters a natural language request in the AI Assistant
-5. Frontend sends the current diagram code and request to the backend API
+3. The rendered diagram is displayed to the user (right panel)
+4. User enters a natural language command in the Chat Box (bottom panel)
+5. Frontend sends the current diagram code and command to the backend API
 6. Backend processes the request using LangChain and Anthropic Claude
 7. Backend returns the updated mermaid code to the frontend
 8. Frontend updates the code editor with the new code
@@ -74,22 +74,20 @@ frontend/
 
 ### 4.1 User Interface Components
 
-1. **Code Editor Panel**: A text area where users can write mermaid syntax
-   - Syntax highlighting is not required but could be added if time permits
+1. **Code Editor Panel**: A text area where users can write mermaid syntax (left panel)
    - Should have sufficient height to accommodate complex diagrams
    - Includes a simple toolbar with common actions (clear, copy)
 
-2. **Diagram Rendering Panel**: The area where the rendered diagram is displayed
+2. **Diagram Rendering Panel**: The area where the rendered diagram is displayed (right panel, largest section)
    - Updates in real-time as the code is changed
    - Displays error messages if the mermaid syntax is invalid
    - Resizes the diagram appropriately to fit the panel
 
-3. **AI Assistant Panel**: A new area for AI interaction
-   - Includes a text input field for natural language requests
-   - Includes a submit button to send requests to the backend
+3. **Chat Box**: A simple input area for AI interaction (bottom panel)
+   - Includes a text input field for natural language commands
+   - Includes a submit button to send commands to the backend
    - Displays loading indicator during API calls
    - Shows error messages if the API processing fails
-   - May include example prompts or suggestions
 
 ### 4.2 JavaScript Components
 
@@ -97,7 +95,7 @@ frontend/
    - Core application logic
    - Event listeners for code editor updates
    - Diagram rendering functionality
-   - Integration with AI Assistant
+   - Integration with Chat Box
 
 2. **mermaid-init.js**
    - Mermaid.js initialization and configuration
@@ -125,11 +123,11 @@ async function updateDiagramWithAI(currentCode, userRequest) {
 ### 4.4 Frontend Input/Output
 
 **Input:**
-- User-entered mermaid code in the code editor
-- User-entered natural language request in the AI Assistant panel
+- User-entered mermaid code in the code editor (left panel)
+- User-entered natural language commands in the Chat Box (bottom panel)
 
 **Output:**
-- Rendered mermaid diagram in the diagram panel
+- Rendered mermaid diagram in the diagram panel (right panel)
 - Updated mermaid code in the code editor after AI processing
 
 ### 4.5 API Request Format (to Backend)
@@ -170,35 +168,34 @@ async function updateDiagramWithAI(currentCode, userRequest) {
 
 ### 6.1 Main Layout
 
-The application will now have a three-panel layout:
+The application will have a three-panel layout:
 
 ```
 +-------------------------------------------------------+
-| Header (Logo, Title)                                  |
-+------------------------+------------------------------+
+|                        |                              |
 |                        |                              |
 |                        |                              |
 |   Code Editor Panel    |    Diagram Rendering Panel   |
+|      (Left)            |        (Right)               |
 |                        |                              |
 |                        |                              |
 |                        |                              |
-+------------------------+------------------------------+
-|                AI Assistant Panel                     |
 +-------------------------------------------------------+
-| Footer (Version, Links)                               |
+|                Chat Box (Bottom)                      |
 +-------------------------------------------------------+
 ```
 
 ### 6.2 Responsive Design
 
-- The layout adapts to different screen sizes
-- On smaller screens, the panels stack vertically
-- The application is usable on tablets and larger mobile devices
-- The AI Assistant panel collapses to a toggle-able section on smaller screens
+- All three panels must remain visible at all times (no scrolling required)
+- The layout maintains its structure on different screen sizes
+- The Diagram Rendering Panel should be the largest section
+- The application is usable on tablets and larger devices
+- Minimum recommended screen size: 1024x768
 
 ## 7. Background Services Integration
 
-The frontend now works seamlessly with the backend running as a background service using Supervisor.
+The frontend works seamlessly with the backend running as a background service using Supervisor.
 
 ### 7.1 Service Configuration
 

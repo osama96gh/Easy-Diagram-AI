@@ -1,0 +1,247 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+/* App container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+}
+
+/* Main content - holds editor and render panels */
+.main-content {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  margin-bottom: 10px;
+  min-height: 0; /* Allow content to shrink */
+  overflow: hidden;
+}
+
+/* Editor panel styles */
+.editor-panel {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow content to shrink */
+  overflow: hidden; /* Prevent internal scrolling */
+}
+
+.editor-panel h2 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.toolbar button {
+  padding: 8px 15px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.toolbar button:hover {
+  background-color: #2980b9;
+}
+
+.code-editor {
+  flex: 1;
+  width: 100%;
+  padding: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: none;
+  min-height: 0; /* Allow content to shrink */
+  overflow: auto; /* Add scrollbars if needed */
+}
+
+/* Render panel styles */
+.render-panel {
+  flex: 2; /* Make render panel larger than editor panel */
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow content to shrink */
+  overflow: hidden; /* Prevent internal scrolling */
+}
+
+.render-panel h2 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.error-display {
+  color: #e74c3c;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #fadbd8;
+  border-radius: 4px;
+}
+
+.diagram-output {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0; /* Allow content to shrink */
+}
+
+/* Chat box styles */
+.chat-box {
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  height: 120px; /* Increased height for chat box to accommodate status */
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+  max-height: 120px;
+  position: relative;
+}
+
+.chat-box h2 {
+  margin-bottom: 5px;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.chat-input-container {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px 15px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.chat-submit-btn {
+  padding: 10px 15px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.chat-submit-btn:hover {
+  background-color: #27ae60;
+}
+
+.chat-submit-btn:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 5px;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  display: block !important;
+  max-height: 30px;
+  overflow: hidden;
+}
+
+.status.loading {
+  background-color: #f9f9f9;
+  color: #7f8c8d;
+  border: 1px solid #ddd;
+}
+
+.status.error {
+  background-color: #fadbd8;
+  color: #e74c3c;
+  border: 1px solid #f5b7b1;
+}
+
+.status.success {
+  background-color: #d5f5e3;
+  color: #27ae60;
+  border: 1px solid #abebc6;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .app-container {
+    padding: 5px;
+  }
+  
+  .editor-panel, .render-panel {
+    padding: 10px;
+  }
+  
+  .editor-panel h2, .render-panel h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .chat-box {
+    padding: 10px;
+    height: 100px;
+    min-height: 100px;
+    max-height: 100px;
+  }
+  
+  .toolbar button, .chat-submit-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .chat-input {
+    padding: 5px 10px;
+  }
+}

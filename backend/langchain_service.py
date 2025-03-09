@@ -60,7 +60,7 @@ def create_llm_client() -> ChatAnthropic:
     
     # Create and configure the model
     llm = ChatAnthropic(
-        model="claude-3-sonnet-20240229",
+        model="claude-3-7-sonnet-latest",
         temperature=0.2,
         anthropic_api_key=ANTHROPIC_API_KEY
     )

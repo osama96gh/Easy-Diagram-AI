@@ -1,4 +1,6 @@
 import React, { useState, KeyboardEvent } from 'react';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 interface CommandBoxProps {
   onSendRequest: (request: string) => Promise<void>;
@@ -58,7 +60,7 @@ const CommandBox: React.FC<CommandBoxProps> = ({
           onClick={onToggleVisibility}
           aria-label={isVisible ? "Hide command box" : "Show command box"}
         >
-          {isVisible ? '▼' : '▲'}
+          {isVisible ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
         </button>
       </div>
       {isVisible && (

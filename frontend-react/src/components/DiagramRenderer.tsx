@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface DiagramRendererProps {
   code: string;
@@ -91,7 +93,7 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
           onClick={onToggleVisibility}
           aria-label={isVisible ? "Hide diagram preview" : "Show diagram preview"}
         >
-          {isVisible ? '►' : '◄'}
+          {isVisible ? <ChevronRightIcon /> : <ChevronLeftIcon />}
         </button>
       </div>
       {isVisible && (

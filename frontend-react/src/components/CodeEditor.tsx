@@ -1,4 +1,6 @@
 import React, { useRef, KeyboardEvent } from 'react';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface CodeEditorProps {
   code: string;
@@ -80,7 +82,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, isVisible, 
           onClick={onToggleVisibility}
           aria-label={isVisible ? "Hide code editor" : "Show code editor"}
         >
-          {isVisible ? '◄' : '►'}
+          {isVisible ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </button>
       </div>
       {isVisible && (

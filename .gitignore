@@ -59,3 +59,7 @@ build/
 # Database files
 backend/instance/diagrams.db
 backend/instance/*.db
+
+# Supervisor files
+supervisord.pid
+supervisor.sock

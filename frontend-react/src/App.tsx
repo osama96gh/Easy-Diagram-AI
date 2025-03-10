@@ -242,6 +242,65 @@ function App() {
     }
   };
 
+  // Handle diagram deletion
+  const handleDeleteDiagram = async (diagramIdToDelete: number) => {
+    try {
+      setStatusMessage('Deleting diagram...');
+      setStatusType('loading');
+      
+      // Delete the diagram
+      await apiService.deleteDiagram(diagramIdToDelete);
+      
+      // If the deleted diagram was the current one
+      if (diagramId === diagramIdToDelete) {
+        // Get all diagrams to find another one to select
+        const remainingDiagrams = await apiService.getAllDiagrams();
+        
+        if (remainingDiagrams.length > 0) {
+          // Select the first available diagram
+          const firstDiagram = remainingDiagrams[0];
+          
+          // Load the selected diagram
+          const diagramData = await apiService.getDiagram(firstDiagram.id);
+          
+          // Update state with the loaded diagram
+          setCode(diagramData.content);
+          setDiagramId(diagramData.id);
+          setTitle(diagramData.name || '');
+          setLastSaved(new Date(diagramData.last_updated));
+          
+          setStatusMessage('Diagram deleted and new diagram loaded');
+        } else {
+          // No diagrams left, reset to empty
+          setCode(emptyDiagram);
+          setDiagramId(null);
+          setTitle('');
+          setLastSaved(null);
+          
+          setStatusMessage('Diagram deleted');
+        }
+      } else {
+        setStatusMessage('Diagram deleted successfully');
+      }
+      
+      // Trigger a refresh of the diagram list
+      setDiagramListRefreshTrigger(prev => prev + 1);
+      
+      // Set status type to success
+      setStatusType('success');
+      
+      // Hide success message after a few seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+        setStatusType(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error deleting diagram:', error);
+      setStatusMessage('Failed to delete diagram');
+      setStatusType('error');
+    }
+  };
+
   return (
     <PanelProvider>
       <div className="app-container">
@@ -261,6 +320,7 @@ function App() {
           <DiagramList
             onSelectDiagram={handleSelectDiagram}
             onCreateDiagram={handleCreateNewDiagram}
+            onDeleteDiagram={handleDeleteDiagram}
             currentDiagramId={diagramId}
             panelId="rightPanel"
             refreshTrigger={diagramListRefreshTrigger}

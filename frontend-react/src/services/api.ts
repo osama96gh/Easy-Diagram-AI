@@ -151,6 +151,33 @@ export const apiService = {
       throw new Error('Failed to update diagram');
     }
   },
+  
+  /**
+   * Deletes a diagram by ID
+   * @param id - The ID of the diagram to delete
+   * @returns Success message
+   */
+  deleteDiagram: async (id: number): Promise<{ success: boolean; message: string }> => {
+    try {
+      console.log(`Deleting diagram ${id} from API`);
+      
+      const response = await axios.delete(`${API_BASE_URL}/api/diagram/${id}`);
+      
+      console.log('API response for diagram deletion:', response.data);
+      
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('API error deleting diagram:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to delete diagram: ${error.message}`);
+      }
+      throw new Error('Failed to delete diagram');
+    }
+  },
   /**
    * Sends a request to update the diagram based on natural language input
    * @param currentCode - The current mermaid code

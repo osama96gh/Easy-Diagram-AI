@@ -278,6 +278,44 @@ def update_diagram(diagram_id):
         return jsonify({"error": "Failed to update diagram"}), 500
 
 
+@app.route("/api/diagram/<int:diagram_id>", methods=["DELETE"])
+def delete_diagram(diagram_id):
+    """
+    API endpoint to delete an existing diagram from the database.
+    
+    Returns:
+    {
+        "success": true,
+        "message": "Diagram deleted successfully"
+    }
+    
+    Or in case of error:
+    {
+        "error": "Failed to delete diagram"
+    }
+    """
+    try:
+        # Get the diagram from the database
+        diagram = Diagram.query.get(diagram_id)
+        
+        if not diagram:
+            return jsonify({"error": f"Diagram with id {diagram_id} not found"}), 404
+            
+        # Delete the diagram
+        db.session.delete(diagram)
+        db.session.commit()
+        
+        # Return success response
+        return jsonify({
+            "success": True,
+            "message": f"Diagram with id {diagram_id} deleted successfully"
+        })
+        
+    except Exception as e:
+        print(f"Error deleting diagram: {str(e)}")
+        return jsonify({"error": "Failed to delete diagram"}), 500
+
+
 @app.route("/api/health", methods=["GET"])
 def health_check():
     """

@@ -15,7 +15,8 @@ html, body, #root {
 body {
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
-  color: #2d3748;
+  color: #2d3748; 
+  
   background-color: #f7fafc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

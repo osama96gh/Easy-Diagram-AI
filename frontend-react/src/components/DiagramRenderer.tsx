@@ -45,7 +45,7 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
     });
   }, []);
 
-  // Render the diagram whenever the code changes
+  // Render the diagram whenever the code changes or when visibility changes
   useEffect(() => {
     const renderDiagram = async () => {
       if (!diagramRef.current || !code.trim()) {
@@ -81,8 +81,11 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
       }
     };
 
-    renderDiagram();
-  }, [code]);
+    // Only render if the diagram is visible
+    if (isVisible) {
+      renderDiagram();
+    }
+  }, [code, isVisible]);
 
   return (
     <div className={`render-panel ${isVisible ? '' : 'collapsed'}`}>
@@ -96,12 +99,10 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
           {isVisible ? <ChevronRightIcon /> : <ChevronLeftIcon />}
         </button>
       </div>
-      {isVisible && (
-        <>
-          {error && <div className="error-display">{`Error: ${error}`}</div>}
-          <div ref={diagramRef} className="diagram-output" />
-        </>
-      )}
+      <div style={{ display: isVisible ? 'block' : 'none', flex: 1 }}>
+        {error && <div className="error-display">{`Error: ${error}`}</div>}
+        <div ref={diagramRef} className="diagram-output" />
+      </div>
     </div>
   );
 };

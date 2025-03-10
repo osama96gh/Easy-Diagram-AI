@@ -1,4 +1,10 @@
 import React, { useRef, KeyboardEvent, useState } from 'react';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EditIcon from '@mui/icons-material/Edit';
@@ -22,6 +28,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isTitleEditable, setIsTitleEditable] = useState<boolean>(false);
   const [editableTitle, setEditableTitle] = useState<string>(title);
+  const [showClearConfirmation, setShowClearConfirmation] = useState<boolean>(false);
 
   /**
    * Handles changes to the code in the textarea
@@ -56,12 +63,26 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
   }, [title]);
 
   /**
-   * Clears the code editor and resets to an empty diagram
+   * Shows the confirmation dialog for clearing the editor
    */
   const clearEditor = () => {
+    setShowClearConfirmation(true);
+  };
+
+  /**
+   * Handles the actual clearing of the editor after confirmation
+   */
+  const handleClearConfirmed = () => {
     const emptyDiagram = `graph TD`;
-    
     onCodeChange(emptyDiagram);
+    setShowClearConfirmation(false);
+  };
+
+  /**
+   * Closes the confirmation dialog without clearing
+   */
+  const handleCancelClear = () => {
+    setShowClearConfirmation(false);
   };
 
   /**
@@ -107,6 +128,28 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
       className={`editor-panel ${isVisible ? '' : 'collapsed'}`}
       style={getPanelStyle(panelId)}
     >
+      {/* Clear confirmation dialog */}
+      <Dialog
+        open={showClearConfirmation}
+        onClose={handleCancelClear}
+        aria-labelledby="clear-dialog-title"
+        aria-describedby="clear-dialog-description"
+      >
+        <DialogTitle id="clear-dialog-title">Clear Code Editor?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="clear-dialog-description">
+            Are you sure you want to clear the code editor? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelClear} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleClearConfirmed} color="primary" autoFocus>
+            Clear
+          </Button>
+        </DialogActions>
+      </Dialog>
       <div className="editor-panel-header">
         <h2>Left Panel - Code Editor</h2>
         <button 

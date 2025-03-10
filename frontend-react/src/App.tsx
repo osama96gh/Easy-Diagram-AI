@@ -31,6 +31,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'loading' | 'error' | 'success' | null>(null);
   const [isApiAvailable, setIsApiAvailable] = useState<boolean>(true);
+  const [diagramListRefreshTrigger, setDiagramListRefreshTrigger] = useState<number>(0);
 
   // Check if the API is available and load the latest diagram when the component mounts
   useEffect(() => {
@@ -180,6 +181,40 @@ function App() {
     }
   };
 
+  // Create a new diagram with default content
+  const handleCreateNewDiagram = async () => {
+    try {
+      setStatusMessage('Creating new diagram...');
+      setStatusType('loading');
+      
+      // Create a new diagram with default content
+      const newDiagram = await apiService.createDiagram(defaultCode, '');
+      
+      // Update state with the new diagram
+      setCode(defaultCode);
+      setDiagramId(newDiagram.id);
+      setTitle('');
+      setLastSaved(new Date(newDiagram.last_updated));
+      
+      // Trigger a refresh of the diagram list
+      setDiagramListRefreshTrigger(prev => prev + 1);
+      
+      // Show success message
+      setStatusMessage('New diagram created successfully');
+      setStatusType('success');
+      
+      // Hide success message after a few seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+        setStatusType(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error creating new diagram:', error);
+      setStatusMessage('Failed to create new diagram');
+      setStatusType('error');
+    }
+  };
+
   // Handle diagram selection from the list
   const handleSelectDiagram = async (selectedDiagramId: number) => {
     try {
@@ -229,8 +264,10 @@ function App() {
           />
           <DiagramList
             onSelectDiagram={handleSelectDiagram}
+            onCreateDiagram={handleCreateNewDiagram}
             currentDiagramId={diagramId}
             panelId="rightPanel"
+            refreshTrigger={diagramListRefreshTrigger}
           />
         </div>
         <div className="bottom-panel">

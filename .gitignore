@@ -55,3 +55,7 @@ build/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Database files
+backend/instance/diagrams.db
+backend/instance/*.db

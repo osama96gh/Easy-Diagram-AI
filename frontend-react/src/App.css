@@ -752,6 +752,34 @@ body {
   border-bottom: 1px solid #edf2f7;
 }
 
+.diagram-list-panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-diagram-button {
+  background: none;
+  border: none;
+  color: #4299e1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.new-diagram-button:hover {
+  background-color: rgba(66, 153, 225, 0.1);
+  color: #3182ce;
+}
+
+.new-diagram-button:active {
+  transform: scale(0.95);
+}
+
 .diagram-list-panel.collapsed .diagram-list-panel-header {
   margin-bottom: 0;
   width: 100%;

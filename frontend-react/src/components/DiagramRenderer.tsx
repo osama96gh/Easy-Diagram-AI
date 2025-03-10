@@ -5,6 +5,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import DownloadIcon from '@mui/icons-material/Download';
 import { usePanelContext } from '../contexts/PanelContext';
 
 interface DiagramRendererProps {
@@ -123,6 +124,52 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId 
     setPosition({ x: 0, y: 0 });
   };
 
+  // Handle download diagram as SVG
+  const handleDownloadImage = () => {
+    if (!diagramRef.current) return;
+    
+    const svgElement = diagramRef.current.querySelector('svg');
+    if (!svgElement) {
+      setError('No diagram found to download');
+      return;
+    }
+
+    try {
+      // Create a clone of the SVG to avoid modifying the displayed one
+      const svgClone = svgElement.cloneNode(true) as SVGElement;
+      
+      // Set explicit width and height attributes
+      const bbox = svgElement.getBBox();
+      const width = bbox.width;
+      const height = bbox.height;
+      
+      svgClone.setAttribute('width', `${width}`);
+      svgClone.setAttribute('height', `${height}`);
+      
+      // Convert SVG to a data URL
+      const svgData = new XMLSerializer().serializeToString(svgClone);
+      
+      // Create a downloadable SVG file
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      // Create download link
+      const downloadLink = document.createElement('a');
+      downloadLink.href = svgUrl;
+      downloadLink.download = `${title || 'diagram'}.svg`;
+      
+      // Trigger download
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      // Clean up
+      URL.revokeObjectURL(svgUrl);
+    } catch (err) {
+      setError('Failed to download diagram: ' + (err instanceof Error ? err.message : String(err)));
+      console.error('Download error:', err);
+    }
+  };
 
   // Handle mouse wheel for zooming
   const handleWheel = (e: React.WheelEvent) => {
@@ -260,6 +307,14 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId 
                 title="Reset view"
               >
                 <RestartAltIcon fontSize="small" />
+              </button>
+              <button 
+                onClick={handleDownloadImage} 
+                className="control-button"
+                aria-label="Download as SVG"
+                title="Download as SVG"
+              >
+                <DownloadIcon fontSize="small" />
               </button>
             </div>
           </div>

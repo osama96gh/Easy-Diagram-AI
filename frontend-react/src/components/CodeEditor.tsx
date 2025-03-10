@@ -98,6 +98,34 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
   };
 
   /**
+   * Downloads the current code as a text file
+   */
+  const downloadCode = () => {
+    if (textareaRef.current) {
+      const codeContent = textareaRef.current.value;
+      const blob = new Blob([codeContent], { type: 'text/plain' });
+      
+      // Use the diagram title if available, otherwise use a default name
+      const fileName = editableTitle.trim() ? 
+        `${editableTitle.trim()}.mmd` : 
+        'diagram.mmd';
+      
+      // Create a temporary link element to trigger the download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(blob);
+      downloadLink.download = fileName;
+      
+      // Append to the document, click it, and remove it
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      // Clean up the URL object
+      URL.revokeObjectURL(downloadLink.href);
+    }
+  };
+
+  /**
    * Handles tab key in the textarea to insert tabs instead of changing focus
    */
   const handleTabKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -200,6 +228,14 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
                 aria-label="Copy code"
               >
                 <span className="icon">📋</span>
+              </button>
+              <button 
+                onClick={downloadCode} 
+                className="icon-button" 
+                title="Download code"
+                aria-label="Download code"
+              >
+                <span className="icon">💾</span>
               </button>
             </div>
             <textarea

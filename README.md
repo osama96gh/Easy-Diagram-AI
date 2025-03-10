@@ -1,10 +1,10 @@
-# Diagmarm Builder v0.2.0
+# Diagmarm Builder
 
-A web-based tool for creating and visualizing diagrams using the mermaid.js library, now with AI-powered diagram modification and a React frontend.
+A web-based tool for creating and visualizing diagrams using the mermaid.js library, with AI-powered diagram modification capabilities.
 
 ## Overview
 
-Diagmarm Builder provides an intuitive interface for creating mermaid diagrams with three main components:
+Diagmarm Builder provides an intuitive interface for creating and editing mermaid diagrams with three main components:
 - A code editor for writing mermaid syntax
 - A rendering area to display the resulting diagram
 - An AI Assistant for modifying diagrams using natural language requests
@@ -18,124 +18,201 @@ Diagmarm Builder provides an intuitive interface for creating mermaid diagrams w
 - Real-time rendering of mermaid diagrams
 - Support for all diagram types available in mermaid.js
 - AI-powered diagram modification through natural language requests
-- Responsive design for various screen sizes
-- Simple toolbar with clear and copy functions
-- Error handling for invalid mermaid syntax
-- Modern React frontend with TypeScript
+- Diagram persistence with save/load functionality
+- Responsive design with collapsible panels
+- Diagram zooming, panning, and downloading capabilities
 
-## Architecture
+## Prerequisites
 
-The application consists of two main parts:
-- **Frontend**: React with TypeScript for the user interface
-- **Backend**: Python Flask server with LangChain for AI processing
+Before installing Diagmarm Builder, ensure you have the following:
 
-## Getting Started
+- **Python 3.8+** - For the backend server
+- **Node.js 14+** - For the frontend application
+- **npm** - For managing frontend dependencies
+- **Git** - For cloning the repository (optional)
+- **Anthropic API Key** - For AI-powered diagram modification
 
-### Using the Makefile (Recommended)
+## Installation & Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/diagmarm-builder.git
+cd diagmarm-builder
+```
+
+### 2. Backend Configuration
+
+Create a `.env` file in the backend directory:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Edit the `.env` file and add your Anthropic API key:
+
+```
+ANTHROPIC_API_KEY=your_api_key_here
+FLASK_ENV=development
+FLASK_DEBUG=1
+CORS_ORIGINS=http://localhost:5000,http://127.0.0.1:5000,http://localhost:3000
+```
+
+### 3. Using the Makefile (Recommended)
 
 The project includes a Makefile to simplify setup and running:
 
-1. Clone this repository or download the files
-2. Make sure you have Python 3 and Node.js installed
-3. Create a `.env` file in the backend directory with your Anthropic API key:
-   ```
-   ANTHROPIC_API_KEY=your_api_key_here
-   FLASK_ENV=development
-   FLASK_DEBUG=1
-   CORS_ORIGINS=http://localhost:5000,http://127.0.0.1:5000,http://localhost:3000
-   ```
-4. Run the following commands:
+```bash
+# Setup the project (create virtual environment, install dependencies)
+make setup
+```
 
-   ```bash
-   # Setup the project (create virtual environment, install dependencies)
-   make setup
-   ```
+## Running the Application
 
-5. You can run the services in two ways:
+You can run the services in two ways:
 
-   **Option 1: Run in separate terminal windows**
-   ```bash
-   # In one terminal, run the backend server
-   make run-backend
+### Option 1: Run in Separate Terminal Windows
 
-   # In another terminal, run the frontend server
-   make run-frontend
-   ```
+```bash
+# In one terminal, run the backend server
+make run-backend
 
-   **Option 2: Run as background services using Supervisor**
-   ```bash
-   # Start both services in the background
-   make start
+# In another terminal, run the frontend server
+make run-frontend
+```
 
-   # Check the status of the services
-   make status
+### Option 2: Run as Background Services Using Supervisor
 
-   # Stop the services when done
-   make stop
+```bash
+# Start both services in the background
+make start
 
-   # Restart the services if needed
-   make restart
-   ```
+# Check the status of the services
+make status
 
-6. Open your browser and navigate to http://localhost:3000
+# Stop the services when done
+make stop
 
-### Background Services with Supervisor
+# Restart the services if needed
+make restart
+```
 
-The project uses Supervisor to run both the frontend and backend services as background processes. This allows you to:
+### Accessing the Application
 
-- Start both services with a single command
-- Run the services in the background without keeping terminal windows open
-- Automatically restart services if they crash
-- Easily check the status of running services
+Once both services are running, open your browser and navigate to:
+- http://localhost:3000
 
-**Available commands:**
+## Manual Setup (Alternative)
 
-- `make start`: Start both services in the background
-- `make stop`: Stop all running services
-- `make restart`: Restart all services
-- `make status`: Check the status of all services
+If you prefer not to use the Makefile, you can set up the project manually:
 
-**Log files:**
+### Backend Setup
 
-Supervisor stores log files in the `logs` directory:
-- `logs/supervisord.log`: Main supervisor log
-- `logs/backend_out.log`: Backend service output
-- `logs/backend_err.log`: Backend service errors
-- `logs/frontend_out.log`: Frontend service output
-- `logs/frontend_err.log`: Frontend service errors
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
 
-### Manual Setup
+### Frontend Setup
 
-#### Frontend Setup (React)
-1. Clone this repository or download the files
-2. Navigate to the frontend-react directory
-3. Install dependencies: `npm install`
-4. Start the development server: `npm start`
-5. Open your browser and navigate to http://localhost:3000
+```bash
+cd frontend
+npm install
+npm start
+```
 
-#### Backend Setup
-1. Navigate to the backend directory
-2. Create a virtual environment: `python3 -m venv .venv`
-3. Activate the virtual environment:
-   - Windows: `.venv\Scripts\activate`
-   - macOS/Linux: `source .venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt`
-5. Create a `.env` file with your Anthropic API key and other settings:
-   ```
-   ANTHROPIC_API_KEY=your_api_key_here
-   FLASK_ENV=development
-   FLASK_DEBUG=1
-   CORS_ORIGINS=http://localhost:5000,http://127.0.0.1:5000,http://localhost:3000
-   ```
-6. Start the Flask server: `python app.py`
+## Using Diagmarm Builder
 
-## Using the AI Assistant
+### Creating a New Diagram
+
+1. When you first open the application, you'll see a three-panel interface
+2. Use the left panel (Code Editor) to write your mermaid diagram code
+3. The diagram will render in real-time in the center panel
+4. You can give your diagram a title by clicking the edit button next to the title field
+
+### Using the AI Assistant
 
 1. Create a diagram in the code editor or use an existing one
-2. Enter a natural language request in the chat box (e.g., "Add a new node for error handling")
-3. Click the "Update Diagram" button to send your request
+2. In the bottom panel, enter a natural language request (e.g., "Add a new node for error handling")
+3. Click the send button or press Enter to submit your request
 4. The AI will process your request and update the diagram code
 5. The diagram will automatically update with the changes
+
+### Managing Diagrams
+
+1. Your diagrams are automatically saved as you work
+2. Use the right panel to view, select, and manage your saved diagrams
+3. Click on a diagram in the list to load it
+4. Use the "+" button to create a new diagram
+5. Use the delete button to remove a diagram
+
+### Diagram Manipulation
+
+- **Zoom**: Use the mouse wheel or the zoom controls in the bottom right
+- **Pan**: Click and drag the diagram to move it around
+- **Reset View**: Click the reset button in the controls
+- **Download**: Click the download button to save the diagram as an SVG file
+
+## Self-Hosting Guide
+
+### Server Requirements
+
+- Linux, macOS, or Windows server
+- Python 3.8+ and Node.js 14+
+- 1GB RAM minimum (2GB+ recommended)
+- 1GB free disk space
+
+### Production Deployment
+
+For production deployment, consider the following:
+
+1. **Use a Production Web Server**:
+   - For the backend, use Gunicorn or uWSGI behind Nginx
+   - For the frontend, build the React app and serve it with Nginx
+
+2. **Environment Configuration**:
+   - Set `FLASK_ENV=production` in the backend `.env` file
+   - Configure proper CORS settings for your domain
+
+3. **Database Considerations**:
+   - The default SQLite database is suitable for small deployments
+   - For larger deployments, consider using PostgreSQL or MySQL
+
+4. **Security**:
+   - Secure your API key
+   - Use HTTPS for all connections
+   - Implement proper authentication if needed
+
+### Docker Deployment (Optional)
+
+If you prefer using Docker, you can create Docker containers for both the frontend and backend services. A basic `docker-compose.yml` file would include:
+
+```yaml
+version: '3'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_ENV=production
+      - ANTHROPIC_API_KEY=your_api_key_here
+      
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+```
 
 ## Supported Diagram Types
 
@@ -151,7 +228,7 @@ Diagmarm Builder supports all diagram types available in mermaid.js, including:
 - Pie charts
 - And more!
 
-## Example
+### Example
 
 ```mermaid
 graph TD
@@ -160,6 +237,32 @@ graph TD
     B -->|No| D[Debug]
     D --> B
 ```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Backend Connection Error**:
+   - Ensure the backend server is running
+   - Check that the API key is correctly set in the `.env` file
+   - Verify the CORS settings if you're using a custom domain
+
+2. **Diagram Not Rendering**:
+   - Check for syntax errors in your mermaid code
+   - Ensure the mermaid syntax is supported by the current version
+
+3. **AI Assistant Not Working**:
+   - Verify your Anthropic API key is valid and has sufficient credits
+   - Check the backend logs for any API-related errors
+
+### Logs
+
+Supervisor stores log files in the `logs` directory:
+- `logs/supervisord.log`: Main supervisor log
+- `logs/backend_out.log`: Backend service output
+- `logs/backend_err.log`: Backend service errors
+- `logs/frontend_out.log`: Frontend service output
+- `logs/frontend_err.log`: Frontend service errors
 
 ## Technology Stack
 
@@ -174,16 +277,7 @@ graph TD
 - Flask
 - LangChain
 - Anthropic Claude (via API)
-
-## Future Enhancements
-
-Future versions of Diagmarm Builder will include:
-- Enhanced AI capabilities with diagram explanation and optimization
-- Saving and loading diagrams
-- Exporting diagrams in various formats
-- Enhanced code editor with syntax highlighting
-- User accounts and cloud storage
-- Collaborative editing features
+- SQLAlchemy
 
 ## License
 

@@ -1,6 +1,7 @@
 import React, { useState, KeyboardEvent } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import SendIcon from '@mui/icons-material/Send';
 import { usePanelContext } from '../contexts/PanelContext';
 
 interface CommandBoxProps {
@@ -9,6 +10,8 @@ interface CommandBoxProps {
   statusMessage: string | null;
   statusType: 'loading' | 'error' | 'success' | null;
   panelId: string;
+  isSaving?: boolean;
+  lastSaved?: Date | null;
 }
 
 /**
@@ -19,7 +22,9 @@ const CommandBox: React.FC<CommandBoxProps> = ({
   isProcessing, 
   statusMessage, 
   statusType,
-  panelId
+  panelId,
+  isSaving = false,
+  lastSaved = null
 }) => {
   const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
   const isVisible = isPanelExpanded(panelId);
@@ -70,28 +75,41 @@ const CommandBox: React.FC<CommandBoxProps> = ({
       {isVisible && (
         <>
           <div className="command-input-container">
-        <input
-          type="text"
-          value={request}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter command to modify diagram..."
-          disabled={isProcessing}
-          className="command-input"
-        />
-        <button
-          onClick={handleSubmit}
-          disabled={isProcessing || !request.trim()}
-          className="command-submit-btn"
-        >
-          Update Diagram
-        </button>
-      </div>
+            <div className="input-with-icon">
+              <input
+                type="text"
+                value={request}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter command to modify diagram..."
+                disabled={isProcessing}
+                className="command-input"
+              />
+              <button
+                onClick={handleSubmit}
+                disabled={isProcessing || !request.trim()}
+                className="send-icon-btn"
+                aria-label="Send command"
+              >
+                <SendIcon fontSize="small" />
+              </button>
+            </div>
+          </div>
           {statusMessage && (
             <div className={`status ${statusType || ''}`} style={{ display: 'block' }}>
               {statusMessage}
             </div>
           )}
+          
+          {/* Saving status display */}
+          <div className="saving-status">
+            {isSaving && <span className="saving-indicator">Saving diagram...</span>}
+            {!isSaving && lastSaved && (
+              <span className="last-saved">
+                Last saved: {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
         </>
       )}
     </div>

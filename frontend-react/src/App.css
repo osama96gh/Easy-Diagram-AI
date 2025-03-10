@@ -308,9 +308,9 @@ body {
 
 /* Command box styles */
 .command-box:not(.collapsed) {
-  height: 110px;
   min-height: 110px;
-  max-height: 110px;
+  height: auto;
+  max-height: none;
 }
 
 .command-box.collapsed {
@@ -439,13 +439,21 @@ body {
 
 .command-input-container {
   display: flex;
-  gap: 8px;
   flex: 1;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  flex: 1;
+  width: 100%;
 }
 
 .command-input {
   flex: 1;
+  width: 100%;
   padding: 8px 12px;
+  padding-right: 40px; /* Make room for the send icon */
   font-size: 14px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -464,36 +472,35 @@ body {
   color: #a0aec0;
 }
 
-.command-submit-btn {
-  padding: 8px 16px;
-  background-color: #38b2ac;
-  color: white;
+.send-icon-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
   border: none;
-  border-radius: 6px;
+  color: #38b2ac;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(56, 178, 172, 0.2);
 }
 
-.command-submit-btn:hover {
-  background-color: #319795;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(56, 178, 172, 0.3);
+.send-icon-btn:hover {
+  background-color: rgba(56, 178, 172, 0.1);
+  color: #319795;
 }
 
-.command-submit-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(56, 178, 172, 0.2);
+.send-icon-btn:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
-.command-submit-btn:disabled {
-  background-color: #cbd5e0;
-  color: #718096;
+.send-icon-btn:disabled {
+  color: #cbd5e0;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .status {
@@ -502,9 +509,11 @@ body {
   border-radius: 4px;
   font-size: 13px;
   display: block !important;
-  max-height: 28px;
-  overflow: hidden;
+  min-height: 28px;
+  max-height: none;
+  overflow: visible;
   font-weight: 500;
+  word-wrap: break-word;
 }
 
 .status.loading {
@@ -523,6 +532,53 @@ body {
   background-color: #f0fff4;
   color: #38a169;
   border-left: 3px solid #68d391;
+}
+
+/* Saving status styles */
+.saving-status {
+  margin-top: 6px;
+  font-size: 12px;
+  display: flex;
+  justify-content: flex-end;
+  color: #718096;
+}
+
+.saving-indicator {
+  color: #4299e1;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.saving-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4299e1;
+  margin-right: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+.last-saved {
+  color: #718096;
+  font-style: italic;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(0.8);
+  }
 }
 
 /* Responsive design */
@@ -546,9 +602,9 @@ body {
   
   .command-box:not(.collapsed) {
     padding: 8px;
-    height: 100px;
     min-height: 100px;
-    max-height: 100px;
+    height: auto;
+    max-height: none;
   }
   
   .command-box.collapsed {
@@ -557,13 +613,14 @@ body {
     max-height: 40px;
   }
   
-  .toolbar button, .command-submit-btn {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-  
   .command-input {
     padding: 8px 12px;
+    padding-right: 36px; /* Slightly smaller padding for the icon on smaller screens */
+  }
+  
+  .send-icon-btn {
+    right: 6px;
+    padding: 3px;
   }
 }
 

@@ -7,12 +7,20 @@ import { apiService } from './services/api';
 import { PanelProvider } from './contexts/PanelContext';
 
 function App() {
-  // State for the mermaid code
-  const [code, setCode] = useState<string>(`graph TD
+  // Default mermaid code
+  const defaultCode = `graph TD
     A[Start] --> B{Is it working?}
     B -->|Yes| C[Great!]
     B -->|No| D[Debug]
-    D --> B`);
+    D --> B`;
+
+  // State for the mermaid code
+  const [code, setCode] = useState<string>(defaultCode);
+
+  // State for diagram persistence
+  const [diagramId, setDiagramId] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // State for component functionality
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -20,9 +28,9 @@ function App() {
   const [statusType, setStatusType] = useState<'loading' | 'error' | 'success' | null>(null);
   const [isApiAvailable, setIsApiAvailable] = useState<boolean>(true);
 
-  // Check if the API is available when the component mounts
+  // Check if the API is available and load the latest diagram when the component mounts
   useEffect(() => {
-    const checkApiAvailability = async () => {
+    const initializeApp = async () => {
       try {
         console.log('Checking API availability...');
         const isAvailable = await apiService.checkAPIAvailability();
@@ -30,19 +38,78 @@ function App() {
         setIsApiAvailable(isAvailable);
         
         if (!isAvailable) {
-          setStatusMessage('AI service is currently unavailable');
+          setStatusMessage('Backend service is currently unavailable');
           setStatusType('error');
+          return;
+        }
+
+        // Try to load the latest diagram
+        try {
+          console.log('Loading latest diagram...');
+          const latestDiagram = await apiService.getLatestDiagram();
+          
+          if (latestDiagram && latestDiagram.content) {
+            console.log('Latest diagram loaded:', latestDiagram);
+            setCode(latestDiagram.content);
+            setDiagramId(latestDiagram.id);
+            setLastSaved(new Date(latestDiagram.last_updated));
+            setStatusMessage('Latest diagram loaded');
+            setStatusType('success');
+            
+            // Hide success message after a few seconds
+            setTimeout(() => {
+              setStatusMessage(null);
+              setStatusType(null);
+            }, 3000);
+          } else {
+            console.log('No existing diagram found, using default');
+          }
+        } catch (error) {
+          console.error('Error loading diagram:', error);
+          // Continue with default diagram if loading fails
         }
       } catch (error) {
         console.error('Error checking API availability:', error);
         setIsApiAvailable(false);
-        setStatusMessage('Failed to connect to AI service');
+        setStatusMessage('Failed to connect to backend service');
         setStatusType('error');
       }
     };
 
-    checkApiAvailability();
+    initializeApp();
   }, []);
+
+  // Save diagram when code changes (with debounce)
+  useEffect(() => {
+    // Skip initial render and when API is not available
+    if (!isApiAvailable) return;
+    
+    const saveTimeout = setTimeout(async () => {
+      try {
+        setIsSaving(true);
+        
+        if (diagramId) {
+          // Update existing diagram
+          console.log('Updating diagram with ID:', diagramId);
+          const updatedDiagram = await apiService.updateDiagram(diagramId, code);
+          setLastSaved(new Date(updatedDiagram.last_updated));
+        } else {
+          // Create new diagram
+          console.log('Creating new diagram');
+          const newDiagram = await apiService.createDiagram(code);
+          setDiagramId(newDiagram.id);
+          setLastSaved(new Date(newDiagram.last_updated));
+        }
+        
+        setIsSaving(false);
+      } catch (error) {
+        console.error('Error saving diagram:', error);
+        setIsSaving(false);
+      }
+    }, 1000); // 1 second debounce
+    
+    return () => clearTimeout(saveTimeout);
+  }, [code, diagramId, isApiAvailable]);
 
   // Handle code changes from the editor
   const handleCodeChange = (newCode: string) => {
@@ -121,6 +188,8 @@ function App() {
             statusMessage={statusMessage}
             statusType={statusType}
             panelId="bottomPanel"
+            isSaving={isSaving}
+            lastSaved={lastSaved}
           />
         </div>
       </div>

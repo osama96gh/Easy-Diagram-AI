@@ -4,3 +4,4 @@ langchain
 langchain-anthropic
 python-dotenv
 supervisor
+flask-sqlalchemy

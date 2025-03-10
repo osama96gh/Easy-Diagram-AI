@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import CodeEditor from './components/CodeEditor';
 import DiagramRenderer from './components/DiagramRenderer';
-import ChatBox from './components/ChatBox';
+import CommandBox from './components/CommandBox';
 import { apiService } from './services/api';
 
 function App() {
@@ -13,11 +13,27 @@ function App() {
     B -->|No| D[Debug]
     D --> B`);
 
-  // State for the chat box
+  // State for component visibility
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'loading' | 'error' | 'success' | null>(null);
   const [isApiAvailable, setIsApiAvailable] = useState<boolean>(true);
+  const [isCommandBoxVisible, setIsCommandBoxVisible] = useState<boolean>(true);
+  const [isCodeEditorVisible, setIsCodeEditorVisible] = useState<boolean>(true);
+  const [isDiagramVisible, setIsDiagramVisible] = useState<boolean>(true);
+
+  // Toggle visibility functions
+  const toggleCommandBox = () => {
+    setIsCommandBoxVisible(!isCommandBoxVisible);
+  };
+
+  const toggleCodeEditor = () => {
+    setIsCodeEditorVisible(!isCodeEditorVisible);
+  };
+
+  const toggleDiagram = () => {
+    setIsDiagramVisible(!isDiagramVisible);
+  };
 
   // Check if the API is available when the component mounts
   useEffect(() => {
@@ -48,7 +64,7 @@ function App() {
     setCode(newCode);
   };
 
-  // Handle requests from the chat box
+  // Handle requests from the command box
   const handleSendRequest = async (request: string) => {
     console.log('Sending request:', request);
     
@@ -102,15 +118,28 @@ function App() {
   return (
     <div className="app-container">
       <div className="main-content">
-        <CodeEditor code={code} onCodeChange={handleCodeChange} />
-        <DiagramRenderer code={code} />
+        <CodeEditor 
+          code={code} 
+          onCodeChange={handleCodeChange} 
+          isVisible={isCodeEditorVisible}
+          onToggleVisibility={toggleCodeEditor}
+        />
+        <DiagramRenderer 
+          code={code} 
+          isVisible={isDiagramVisible}
+          onToggleVisibility={toggleDiagram}
+        />
       </div>
-      <ChatBox
-        onSendRequest={handleSendRequest}
-        isProcessing={isProcessing}
-        statusMessage={statusMessage}
-        statusType={statusType}
-      />
+      <div className="command-box-container">
+        <CommandBox
+          onSendRequest={handleSendRequest}
+          isProcessing={isProcessing}
+          statusMessage={statusMessage}
+          statusType={statusType}
+          isVisible={isCommandBoxVisible}
+          onToggleVisibility={toggleCommandBox}
+        />
+      </div>
     </div>
   );
 }

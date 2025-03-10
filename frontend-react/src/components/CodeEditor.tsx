@@ -3,12 +3,14 @@ import React, { useRef, KeyboardEvent } from 'react';
 interface CodeEditorProps {
   code: string;
   onCodeChange: (code: string) => void;
+  isVisible: boolean;
+  onToggleVisibility: () => void;
 }
 
 /**
  * CodeEditor component for editing mermaid code
  */
-const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, isVisible, onToggleVisibility }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /**
@@ -70,20 +72,47 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange }) => {
   };
 
   return (
-    <div className="editor-panel">
-      <h2>Code Editor</h2>
-      <div className="toolbar">
-        <button onClick={clearEditor}>Clear</button>
-        <button onClick={copyCode}>Copy Code</button>
+    <div className={`editor-panel ${isVisible ? '' : 'collapsed'}`}>
+      <div className="editor-panel-header">
+        <h2>Code Editor</h2>
+        <button 
+          className="toggle-arrow" 
+          onClick={onToggleVisibility}
+          aria-label={isVisible ? "Hide code editor" : "Show code editor"}
+        >
+          {isVisible ? '◄' : '►'}
+        </button>
       </div>
-      <textarea
-        ref={textareaRef}
-        value={code}
-        onChange={handleCodeChange}
-        onKeyDown={handleTabKey}
-        placeholder="Enter your mermaid code here..."
-        className="code-editor"
-      />
+      {isVisible && (
+        <div className="code-editor-container">
+          <div className="editor-actions">
+            <button 
+              onClick={clearEditor} 
+              className="icon-button" 
+              title="Clear code"
+              aria-label="Clear code"
+            >
+              <span className="icon">🗑️</span>
+            </button>
+            <button 
+              onClick={copyCode} 
+              className="icon-button" 
+              title="Copy code"
+              aria-label="Copy code"
+            >
+              <span className="icon">📋</span>
+            </button>
+          </div>
+          <textarea
+            ref={textareaRef}
+            value={code}
+            onChange={handleCodeChange}
+            onKeyDown={handleTabKey}
+            placeholder="Enter your mermaid code here..."
+            className="code-editor"
+          />
+        </div>
+      )}
     </div>
   );
 };

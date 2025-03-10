@@ -3,12 +3,14 @@ import mermaid from 'mermaid';
 
 interface DiagramRendererProps {
   code: string;
+  isVisible: boolean;
+  onToggleVisibility: () => void;
 }
 
 /**
  * DiagramRenderer component for rendering mermaid diagrams
  */
-const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code }) => {
+const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onToggleVisibility }) => {
   const [error, setError] = useState<string | null>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
 
@@ -81,10 +83,23 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code }) => {
   }, [code]);
 
   return (
-    <div className="render-panel">
-      <h2>Diagram Preview</h2>
-      {error && <div className="error-display">{`Error: ${error}`}</div>}
-      <div ref={diagramRef} className="diagram-output" />
+    <div className={`render-panel ${isVisible ? '' : 'collapsed'}`}>
+      <div className="render-panel-header">
+        <h2>Diagram Preview</h2>
+        <button 
+          className="toggle-arrow" 
+          onClick={onToggleVisibility}
+          aria-label={isVisible ? "Hide diagram preview" : "Show diagram preview"}
+        >
+          {isVisible ? '►' : '◄'}
+        </button>
+      </div>
+      {isVisible && (
+        <>
+          {error && <div className="error-display">{`Error: ${error}`}</div>}
+          <div ref={diagramRef} className="diagram-output" />
+        </>
+      )}
     </div>
   );
 };

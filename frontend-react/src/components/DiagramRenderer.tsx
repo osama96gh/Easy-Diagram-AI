@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 interface DiagramRendererProps {
   code: string;
@@ -9,12 +12,26 @@ interface DiagramRendererProps {
   onToggleVisibility: () => void;
 }
 
+// Constants for zoom and pan
+const ZOOM_STEP = 0.1;
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 3;
+const PAN_STEP = 50;
+
 /**
  * DiagramRenderer component for rendering mermaid diagrams
+ * with zoom, pan, and navigation capabilities
  */
 const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onToggleVisibility }) => {
   const [error, setError] = useState<string | null>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // State for zoom and pan
+  const [scale, setScale] = useState<number>(1);
+  const [position, setPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
 
   // Initialize mermaid
   useEffect(() => {
@@ -87,6 +104,80 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
     }
   }, [code, isVisible]);
 
+  // Handle zoom in
+  const handleZoomIn = () => {
+    setScale(prevScale => Math.min(prevScale + ZOOM_STEP, ZOOM_MAX));
+  };
+
+  // Handle zoom out
+  const handleZoomOut = () => {
+    setScale(prevScale => Math.max(prevScale - ZOOM_STEP, ZOOM_MIN));
+  };
+
+  // Handle reset view
+  const handleResetView = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+
+  // Handle mouse wheel for zooming
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+    setScale(prevScale => {
+      const newScale = prevScale + delta;
+      return Math.min(Math.max(newScale, ZOOM_MIN), ZOOM_MAX);
+    });
+  };
+
+  // Handle mouse down for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only left mouse button
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  // Handle mouse move for dragging
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    
+    setPosition(prev => ({
+      x: prev.x + dx,
+      y: prev.y + dy
+    }));
+    
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  // Handle mouse up to end dragging
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Handle mouse leave to end dragging
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  // Add event listeners for mouse up globally
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging]);
+
   return (
     <div className={`render-panel ${isVisible ? '' : 'collapsed'}`}>
       <div className="render-panel-header">
@@ -101,7 +192,65 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
       </div>
       <div style={{ display: isVisible ? 'block' : 'none', flex: 1 }}>
         {error && <div className="error-display">{`Error: ${error}`}</div>}
-        <div ref={diagramRef} className="diagram-output" />
+        
+        {/* Diagram container with zoom and pan */}
+        <div 
+          ref={containerRef}
+          className="diagram-container"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          style={{ 
+            cursor: isDragging ? 'grabbing' : 'grab',
+            position: 'relative'
+          }}
+        >
+          <div 
+            ref={diagramRef} 
+            className="diagram-output"
+            style={{
+              transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+              transformOrigin: 'center center',
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+              pointerEvents: 'auto' // Allow interactions with the diagram
+            }}
+          />
+        </div>
+        
+        {/* Diagram controls as separate element outside the diagram container */}
+        {isVisible && (
+          <div className="diagram-controls-fixed">
+            <div className="zoom-controls">
+              <button 
+                onClick={handleZoomOut} 
+                className="control-button"
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                <RemoveIcon fontSize="small" />
+              </button>
+              <span className="zoom-level">{Math.round(scale * 100)}%</span>
+              <button 
+                onClick={handleZoomIn} 
+                className="control-button"
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                <AddIcon fontSize="small" />
+              </button>
+              <button 
+                onClick={handleResetView} 
+                className="control-button"
+                aria-label="Reset view"
+                title="Reset view"
+              >
+                <RestartAltIcon fontSize="small" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,6 +9,10 @@ Diagmarm Builder provides an intuitive interface for creating mermaid diagrams w
 - A rendering area to display the resulting diagram
 - An AI Assistant for modifying diagrams using natural language requests
 
+## Demo
+
+![Diagmarm Builder Demo](./demo.gif)
+
 ## Features
 
 - Real-time rendering of mermaid diagrams

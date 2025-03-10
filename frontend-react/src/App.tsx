@@ -8,15 +8,11 @@ import { apiService } from './services/api';
 import { PanelProvider } from './contexts/PanelContext';
 
 function App() {
-  // Default mermaid code
-  const defaultCode = `graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
-    D --> B`;
+  // Empty diagram code
+  const emptyDiagram = `graph TD`;
 
   // State for the mermaid code
-  const [code, setCode] = useState<string>(defaultCode);
+  const [code, setCode] = useState<string>(emptyDiagram);
   
   // State for the diagram title
   const [title, setTitle] = useState<string>('');
@@ -71,11 +67,11 @@ function App() {
               setStatusType(null);
             }, 3000);
           } else {
-            console.log('No existing diagram found, using default');
+            console.log('No existing diagram found, using empty diagram');
           }
         } catch (error) {
           console.error('Error loading diagram:', error);
-          // Continue with default diagram if loading fails
+          // Continue with empty diagram if loading fails
         }
       } catch (error) {
         console.error('Error checking API availability:', error);
@@ -181,17 +177,17 @@ function App() {
     }
   };
 
-  // Create a new diagram with default content
+  // Create a new diagram with empty content
   const handleCreateNewDiagram = async () => {
     try {
       setStatusMessage('Creating new diagram...');
       setStatusType('loading');
       
-      // Create a new diagram with default content
-      const newDiagram = await apiService.createDiagram(defaultCode, '');
+      // Create a new diagram with empty content
+      const newDiagram = await apiService.createDiagram(emptyDiagram, '');
       
       // Update state with the new diagram
-      setCode(defaultCode);
+      setCode(emptyDiagram);
       setDiagramId(newDiagram.id);
       setTitle('');
       setLastSaved(new Date(newDiagram.last_updated));

@@ -56,16 +56,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
   }, [title]);
 
   /**
-   * Clears the code editor and resets to default example
+   * Clears the code editor and resets to an empty diagram
    */
   const clearEditor = () => {
-    const defaultCode = `graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
-    D --> B`;
+    const emptyDiagram = `graph TD`;
     
-    onCodeChange(defaultCode);
+    onCodeChange(emptyDiagram);
   };
 
   /**

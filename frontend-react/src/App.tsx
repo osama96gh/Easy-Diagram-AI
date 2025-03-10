@@ -3,6 +3,7 @@ import './App.css';
 import CodeEditor from './components/CodeEditor';
 import DiagramRenderer from './components/DiagramRenderer';
 import CommandBox from './components/CommandBox';
+import DiagramList from './components/DiagramList';
 import { apiService } from './services/api';
 import { PanelProvider } from './contexts/PanelContext';
 
@@ -179,6 +180,37 @@ function App() {
     }
   };
 
+  // Handle diagram selection from the list
+  const handleSelectDiagram = async (selectedDiagramId: number) => {
+    try {
+      setStatusMessage('Loading diagram...');
+      setStatusType('loading');
+      
+      // Fetch the selected diagram
+      const diagram = await apiService.getDiagram(selectedDiagramId);
+      
+      // Update state with the loaded diagram
+      setCode(diagram.content);
+      setDiagramId(diagram.id);
+      setTitle(diagram.name || '');
+      setLastSaved(new Date(diagram.last_updated));
+      
+      // Show success message
+      setStatusMessage('Diagram loaded successfully');
+      setStatusType('success');
+      
+      // Hide success message after a few seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+        setStatusType(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error loading diagram:', error);
+      setStatusMessage('Failed to load diagram');
+      setStatusType('error');
+    }
+  };
+
   return (
     <PanelProvider>
       <div className="app-container">
@@ -194,6 +226,11 @@ function App() {
             code={code}
             title={title}
             panelId="centerPanel"
+          />
+          <DiagramList
+            onSelectDiagram={handleSelectDiagram}
+            currentDiagramId={diagramId}
+            panelId="rightPanel"
           />
         </div>
         <div className="bottom-panel">

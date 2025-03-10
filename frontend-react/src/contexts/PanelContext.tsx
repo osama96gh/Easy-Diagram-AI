@@ -41,6 +41,13 @@ const initialPanelStates: PanelsState = {
     expandedFlex: 3,
     collapsedWidth: '40px',
   },
+  rightPanel: {
+    id: 'rightPanel',
+    isExpanded: true,
+    defaultFlex: 1,
+    expandedFlex: 2,
+    collapsedWidth: '40px',
+  },
   bottomPanel: {
     id: 'bottomPanel',
     isExpanded: true,

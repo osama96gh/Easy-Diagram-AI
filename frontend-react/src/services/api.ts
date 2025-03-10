@@ -7,6 +7,58 @@ const API_BASE_URL = 'http://127.0.0.1:5000';
  */
 export const apiService = {
   /**
+   * Retrieves all diagrams from the backend
+   * @returns Array of diagram metadata (id, name, last_updated)
+   */
+  getAllDiagrams: async (): Promise<Array<{ id: number; name: string; last_updated: string }>> => {
+    try {
+      console.log('Retrieving all diagrams from API');
+      
+      const response = await axios.get(`${API_BASE_URL}/api/diagrams`);
+      
+      console.log('API response for all diagrams:', response.data);
+      
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('API error retrieving diagrams:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to retrieve diagrams: ${error.message}`);
+      }
+      throw new Error('Failed to retrieve diagrams');
+    }
+  },
+  
+  /**
+   * Retrieves a specific diagram by ID
+   * @param id - The ID of the diagram to retrieve
+   * @returns The diagram data
+   */
+  getDiagram: async (id: number): Promise<{ id: number; content: string; last_updated: string; name: string | null }> => {
+    try {
+      console.log(`Retrieving diagram ${id} from API`);
+      
+      const response = await axios.get(`${API_BASE_URL}/api/diagram/${id}`);
+      
+      console.log('API response for diagram:', response.data);
+      
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('API error retrieving diagram:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to retrieve diagram: ${error.message}`);
+      }
+      throw new Error('Failed to retrieve diagram');
+    }
+  },
+  /**
    * Retrieves the latest diagram from the backend
    * @returns The latest diagram data or null if no diagram exists
    */

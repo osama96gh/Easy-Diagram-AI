@@ -78,6 +78,42 @@ def update_diagram_with_ai():
         return jsonify({"error": "Failed to process request"}), 500
 
 
+@app.route("/api/diagrams", methods=["GET"])
+def get_all_diagrams():
+    """
+    API endpoint to retrieve all diagrams.
+    
+    Returns:
+    [
+        {
+            "id": 1,
+            "name": "Diagram 1",
+            "last_updated": "2023-10-03T12:34:56"
+        },
+        ...
+    ]
+    """
+    try:
+        # Get all diagrams from the database, ordered by last updated
+        diagrams = Diagram.query.order_by(Diagram.last_updated.desc()).all()
+        
+        # Return a simplified version with just id, name, and last_updated
+        result = [
+            {
+                "id": diagram.id,
+                "name": diagram.name or f"Untitled Diagram {diagram.id}",
+                "last_updated": diagram.last_updated.isoformat() if diagram.last_updated else None
+            }
+            for diagram in diagrams
+        ]
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        print(f"Error retrieving diagrams: {str(e)}")
+        return jsonify({"error": "Failed to retrieve diagrams"}), 500
+
+
 @app.route("/api/diagram", methods=["GET"])
 def get_diagram():
     """
@@ -157,6 +193,33 @@ def create_diagram():
     except Exception as e:
         print(f"Error creating diagram: {str(e)}")
         return jsonify({"error": "Failed to create diagram"}), 500
+
+
+@app.route("/api/diagram/<int:diagram_id>", methods=["GET"])
+def get_diagram_by_id(diagram_id):
+    """
+    API endpoint to retrieve a specific diagram by ID.
+    
+    Returns:
+    {
+        "id": 1,
+        "content": "graph TD\nA[Start] --> B{Is it working?}\nB -->|Yes| C[Great!]\nB -->|No| D[Debug]\nD --> B",
+        "last_updated": "2023-10-03T12:34:56",
+        "name": "My Diagram"
+    }
+    """
+    try:
+        # Get the diagram from the database
+        diagram = Diagram.query.get(diagram_id)
+        
+        if not diagram:
+            return jsonify({"error": f"Diagram with id {diagram_id} not found"}), 404
+            
+        return jsonify(diagram.to_dict())
+            
+    except Exception as e:
+        print(f"Error retrieving diagram: {str(e)}")
+        return jsonify({"error": "Failed to retrieve diagram"}), 500
 
 
 @app.route("/api/diagram/<int:diagram_id>", methods=["PUT"])

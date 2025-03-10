@@ -9,6 +9,7 @@ import { usePanelContext } from '../contexts/PanelContext';
 
 interface DiagramRendererProps {
   code: string;
+  title?: string;
   panelId: string;
 }
 
@@ -22,7 +23,7 @@ const PAN_STEP = 50;
  * DiagramRenderer component for rendering mermaid diagrams in the center panel
  * with zoom, pan, and navigation capabilities
  */
-const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, panelId }) => {
+const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId }) => {
   const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
   const isVisible = isPanelExpanded(panelId);
   const [error, setError] = useState<string | null>(null);
@@ -197,6 +198,13 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, panelId }) => {
       </div>
       <div style={{ display: isVisible ? 'flex' : 'none', flexDirection: 'column', flex: 1 }}>
         {error && <div className="error-display">{`Error: ${error}`}</div>}
+        
+        {/* Display diagram title if available */}
+        {title && (
+          <div className="diagram-title">
+            {title}
+          </div>
+        )}
         
         {/* Diagram container with zoom and pan */}
         <div 

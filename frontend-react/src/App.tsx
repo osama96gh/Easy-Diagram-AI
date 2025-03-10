@@ -16,6 +16,9 @@ function App() {
 
   // State for the mermaid code
   const [code, setCode] = useState<string>(defaultCode);
+  
+  // State for the diagram title
+  const [title, setTitle] = useState<string>('');
 
   // State for diagram persistence
   const [diagramId, setDiagramId] = useState<number | null>(null);
@@ -53,6 +56,10 @@ function App() {
             setCode(latestDiagram.content);
             setDiagramId(latestDiagram.id);
             setLastSaved(new Date(latestDiagram.last_updated));
+            // Set the title if available
+            if (latestDiagram.name) {
+              setTitle(latestDiagram.name);
+            }
             setStatusMessage('Latest diagram loaded');
             setStatusType('success');
             
@@ -79,7 +86,7 @@ function App() {
     initializeApp();
   }, []);
 
-  // Save diagram when code changes (with debounce)
+  // Save diagram when code or title changes (with debounce)
   useEffect(() => {
     // Skip initial render and when API is not available
     if (!isApiAvailable) return;
@@ -91,12 +98,12 @@ function App() {
         if (diagramId) {
           // Update existing diagram
           console.log('Updating diagram with ID:', diagramId);
-          const updatedDiagram = await apiService.updateDiagram(diagramId, code);
+          const updatedDiagram = await apiService.updateDiagram(diagramId, code, title);
           setLastSaved(new Date(updatedDiagram.last_updated));
         } else {
           // Create new diagram
           console.log('Creating new diagram');
-          const newDiagram = await apiService.createDiagram(code);
+          const newDiagram = await apiService.createDiagram(code, title);
           setDiagramId(newDiagram.id);
           setLastSaved(new Date(newDiagram.last_updated));
         }
@@ -109,11 +116,16 @@ function App() {
     }, 1000); // 1 second debounce
     
     return () => clearTimeout(saveTimeout);
-  }, [code, diagramId, isApiAvailable]);
+  }, [code, title, diagramId, isApiAvailable]);
 
   // Handle code changes from the editor
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
+  };
+  
+  // Handle title changes from the editor
+  const handleTitleChange = (newTitle: string) => {
+    setTitle(newTitle);
   };
 
   // Handle requests from the command box
@@ -173,11 +185,14 @@ function App() {
         <div className="main-panel">
           <CodeEditor 
             code={code} 
-            onCodeChange={handleCodeChange} 
+            title={title}
+            onCodeChange={handleCodeChange}
+            onTitleChange={handleTitleChange}
             panelId="leftPanel"
           />
           <DiagramRenderer 
-            code={code} 
+            code={code}
+            title={title}
             panelId="centerPanel"
           />
         </div>

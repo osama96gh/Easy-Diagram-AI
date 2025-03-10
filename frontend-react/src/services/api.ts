@@ -43,7 +43,7 @@ export const apiService = {
    * @param name - Optional name for the diagram
    * @returns The created diagram data
    */
-  createDiagram: async (content: string, name?: string): Promise<{ id: number; content: string; last_updated: string; name: string | null }> => {
+  createDiagram: async (content: string, name: string = ''): Promise<{ id: number; content: string; last_updated: string; name: string | null }> => {
     try {
       console.log('Creating new diagram in API:', { content, name });
       
@@ -75,7 +75,7 @@ export const apiService = {
    * @param name - Optional updated name for the diagram
    * @returns The updated diagram data
    */
-  updateDiagram: async (id: number, content: string, name?: string): Promise<{ id: number; content: string; last_updated: string; name: string | null }> => {
+  updateDiagram: async (id: number, content: string, name: string = ''): Promise<{ id: number; content: string; last_updated: string; name: string | null }> => {
     try {
       console.log('Updating diagram in API:', { id, content, name });
       

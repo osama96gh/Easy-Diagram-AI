@@ -1,27 +1,28 @@
 import React, { useState, KeyboardEvent } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { usePanelContext } from '../contexts/PanelContext';
 
 interface CommandBoxProps {
   onSendRequest: (request: string) => Promise<void>;
   isProcessing: boolean;
   statusMessage: string | null;
   statusType: 'loading' | 'error' | 'success' | null;
-  isVisible: boolean;
-  onToggleVisibility: () => void;
+  panelId: string;
 }
 
 /**
- * CommandBox component for sending natural language requests
+ * CommandBox component for sending natural language requests in the bottom panel
  */
 const CommandBox: React.FC<CommandBoxProps> = ({ 
   onSendRequest, 
   isProcessing, 
   statusMessage, 
   statusType,
-  isVisible,
-  onToggleVisibility
+  panelId
 }) => {
+  const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
+  const isVisible = isPanelExpanded(panelId);
   const [request, setRequest] = useState('');
 
   /**
@@ -52,12 +53,15 @@ const CommandBox: React.FC<CommandBoxProps> = ({
   };
 
   return (
-    <div className={`command-box ${isVisible ? '' : 'collapsed'}`}>
+    <div 
+      className={`command-box ${isVisible ? '' : 'collapsed'}`}
+      style={getPanelStyle(panelId)}
+    >
       <div className="command-box-header">
-        <h2>Command Box</h2>
+        <h2>Bottom Panel - Command Box</h2>
         <button 
           className="toggle-arrow" 
-          onClick={onToggleVisibility}
+          onClick={() => togglePanelExpansion(panelId)}
           aria-label={isVisible ? "Hide command box" : "Show command box"}
         >
           {isVisible ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}

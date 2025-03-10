@@ -5,11 +5,11 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { usePanelContext } from '../contexts/PanelContext';
 
 interface DiagramRendererProps {
   code: string;
-  isVisible: boolean;
-  onToggleVisibility: () => void;
+  panelId: string;
 }
 
 // Constants for zoom and pan
@@ -19,10 +19,12 @@ const ZOOM_MAX = 3;
 const PAN_STEP = 50;
 
 /**
- * DiagramRenderer component for rendering mermaid diagrams
+ * DiagramRenderer component for rendering mermaid diagrams in the center panel
  * with zoom, pan, and navigation capabilities
  */
-const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onToggleVisibility }) => {
+const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, panelId }) => {
+  const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
+  const isVisible = isPanelExpanded(panelId);
   const [error, setError] = useState<string | null>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -179,18 +181,21 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, isVisible, onTo
   }, [isDragging]);
 
   return (
-    <div className={`render-panel ${isVisible ? '' : 'collapsed'}`}>
+    <div 
+      className={`render-panel ${isVisible ? '' : 'collapsed'}`}
+      style={getPanelStyle(panelId)}
+    >
       <div className="render-panel-header">
-        <h2>Diagram Preview</h2>
+        <h2>Center Panel - Diagram Preview</h2>
         <button 
           className="toggle-arrow" 
-          onClick={onToggleVisibility}
+          onClick={() => togglePanelExpansion(panelId)}
           aria-label={isVisible ? "Hide diagram preview" : "Show diagram preview"}
         >
           {isVisible ? <ChevronRightIcon /> : <ChevronLeftIcon />}
         </button>
       </div>
-      <div style={{ display: isVisible ? 'block' : 'none', flex: 1 }}>
+      <div style={{ display: isVisible ? 'flex' : 'none', flexDirection: 'column', flex: 1 }}>
         {error && <div className="error-display">{`Error: ${error}`}</div>}
         
         {/* Diagram container with zoom and pan */}

@@ -4,6 +4,7 @@ import CodeEditor from './components/CodeEditor';
 import DiagramRenderer from './components/DiagramRenderer';
 import CommandBox from './components/CommandBox';
 import { apiService } from './services/api';
+import { PanelProvider } from './contexts/PanelContext';
 
 function App() {
   // State for the mermaid code
@@ -13,27 +14,11 @@ function App() {
     B -->|No| D[Debug]
     D --> B`);
 
-  // State for component visibility
+  // State for component functionality
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'loading' | 'error' | 'success' | null>(null);
   const [isApiAvailable, setIsApiAvailable] = useState<boolean>(true);
-  const [isCommandBoxVisible, setIsCommandBoxVisible] = useState<boolean>(true);
-  const [isCodeEditorVisible, setIsCodeEditorVisible] = useState<boolean>(true);
-  const [isDiagramVisible, setIsDiagramVisible] = useState<boolean>(true);
-
-  // Toggle visibility functions
-  const toggleCommandBox = () => {
-    setIsCommandBoxVisible(!isCommandBoxVisible);
-  };
-
-  const toggleCodeEditor = () => {
-    setIsCodeEditorVisible(!isCodeEditorVisible);
-  };
-
-  const toggleDiagram = () => {
-    setIsDiagramVisible(!isDiagramVisible);
-  };
 
   // Check if the API is available when the component mounts
   useEffect(() => {
@@ -116,31 +101,30 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <div className="main-content">
-        <CodeEditor 
-          code={code} 
-          onCodeChange={handleCodeChange} 
-          isVisible={isCodeEditorVisible}
-          onToggleVisibility={toggleCodeEditor}
-        />
-        <DiagramRenderer 
-          code={code} 
-          isVisible={isDiagramVisible}
-          onToggleVisibility={toggleDiagram}
-        />
+    <PanelProvider>
+      <div className="app-container">
+        <div className="main-panel">
+          <CodeEditor 
+            code={code} 
+            onCodeChange={handleCodeChange} 
+            panelId="leftPanel"
+          />
+          <DiagramRenderer 
+            code={code} 
+            panelId="centerPanel"
+          />
+        </div>
+        <div className="bottom-panel">
+          <CommandBox
+            onSendRequest={handleSendRequest}
+            isProcessing={isProcessing}
+            statusMessage={statusMessage}
+            statusType={statusType}
+            panelId="bottomPanel"
+          />
+        </div>
       </div>
-      <div className="command-box-container">
-        <CommandBox
-          onSendRequest={handleSendRequest}
-          isProcessing={isProcessing}
-          statusMessage={statusMessage}
-          statusType={statusType}
-          isVisible={isCommandBoxVisible}
-          onToggleVisibility={toggleCommandBox}
-        />
-      </div>
-    </div>
+    </PanelProvider>
   );
 }
 

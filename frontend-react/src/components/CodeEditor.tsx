@@ -1,18 +1,20 @@
 import React, { useRef, KeyboardEvent } from 'react';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { usePanelContext } from '../contexts/PanelContext';
 
 interface CodeEditorProps {
   code: string;
   onCodeChange: (code: string) => void;
-  isVisible: boolean;
-  onToggleVisibility: () => void;
+  panelId: string;
 }
 
 /**
- * CodeEditor component for editing mermaid code
+ * CodeEditor component for editing mermaid code in the left panel
  */
-const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, isVisible, onToggleVisibility }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, panelId }) => {
+  const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
+  const isVisible = isPanelExpanded(panelId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /**
@@ -74,12 +76,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, isVisible, 
   };
 
   return (
-    <div className={`editor-panel ${isVisible ? '' : 'collapsed'}`}>
+    <div 
+      className={`editor-panel ${isVisible ? '' : 'collapsed'}`}
+      style={getPanelStyle(panelId)}
+    >
       <div className="editor-panel-header">
-        <h2>Code Editor</h2>
+        <h2>Left Panel - Code Editor</h2>
         <button 
           className="toggle-arrow" 
-          onClick={onToggleVisibility}
+          onClick={() => togglePanelExpansion(panelId)}
           aria-label={isVisible ? "Hide code editor" : "Show code editor"}
         >
           {isVisible ? <ChevronLeftIcon /> : <ChevronRightIcon />}

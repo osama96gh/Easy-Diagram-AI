@@ -32,8 +32,8 @@ body {
   background: linear-gradient(to bottom right, #f7fafc, #edf2f7);
 }
 
-/* Main content - holds editor and render panels */
-.main-content {
+/* Main panel - holds left and center panels */
+.main-panel {
   display: flex;
   flex: 1;
   gap: 8px;
@@ -42,9 +42,8 @@ body {
   overflow: hidden;
 }
 
-/* Editor panel styles */
-.editor-panel {
-  flex: 1;
+/* Panel styles - general */
+.editor-panel, .render-panel, .command-box {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -58,8 +57,9 @@ body {
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.editor-panel.collapsed {
-  flex: 0 0 40px;
+/* Collapsed panel styles */
+.editor-panel.collapsed, .render-panel.collapsed {
+  flex: 0 0 40px !important;
   min-height: 100%;
   max-height: none;
   overflow: hidden;
@@ -74,7 +74,8 @@ body {
   align-items: center;
 }
 
-.editor-panel-header {
+/* Panel headers */
+.editor-panel-header, .render-panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -83,7 +84,8 @@ body {
   border-bottom: 1px solid #edf2f7;
 }
 
-.editor-panel.collapsed .editor-panel-header {
+.editor-panel.collapsed .editor-panel-header,
+.render-panel.collapsed .render-panel-header {
   margin-bottom: 0;
   width: 100%;
   padding: 4px 0;
@@ -91,7 +93,7 @@ body {
   border-bottom: none;
 }
 
-.editor-panel h2 {
+.editor-panel h2, .render-panel h2 {
   margin: 0;
   color: #4a5568;
   font-weight: 500;
@@ -99,7 +101,7 @@ body {
   letter-spacing: -0.025em;
 }
 
-.editor-panel.collapsed h2 {
+.editor-panel.collapsed h2, .render-panel.collapsed h2 {
   display: none;
 }
 
@@ -203,67 +205,6 @@ body {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
 }
 
-/* Render panel styles */
-.render-panel {
-  flex: 2; /* Make render panel larger than editor panel */
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* Allow content to shrink */
-  overflow: hidden; /* Prevent internal scrolling */
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.render-panel.collapsed {
-  flex: 0 0 40px;
-  min-height: 100%;
-  max-height: none;
-  overflow: hidden;
-  transform: none;
-  margin-left: 0;
-  padding: 0;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  background-color: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.render-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #edf2f7;
-}
-
-.render-panel.collapsed .render-panel-header {
-  margin-bottom: 0;
-  width: 100%;
-  padding: 4px 0;
-  flex-direction: column;
-  border-bottom: none;
-}
-
-.render-panel h2 {
-  margin: 0;
-  color: #4a5568;
-  font-weight: 500;
-  font-size: 15px;
-  letter-spacing: -0.025em;
-}
-
-.render-panel.collapsed h2 {
-  display: none;
-}
-
 .error-display {
   color: #e53e3e;
   margin-bottom: 8px;
@@ -359,25 +300,13 @@ body {
   transform: translateY(1px);
 }
 
-/* Command box container */
-.command-box-container {
+/* Bottom panel */
+.bottom-panel {
   position: relative;
   margin-top: 4px;
 }
 
 /* Command box styles */
-.command-box {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
 .command-box:not(.collapsed) {
   height: 110px;
   min-height: 110px;
@@ -640,7 +569,7 @@ body {
 
 /* Mobile design */
 @media (max-width: 768px) {
-  .main-content {
+  .main-panel {
     flex-direction: column;
   }
   

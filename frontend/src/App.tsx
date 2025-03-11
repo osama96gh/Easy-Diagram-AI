@@ -180,18 +180,25 @@ function App() {
   };
 
   // Create a new diagram with empty content
-  const handleCreateNewDiagram = async () => {
+  const handleCreateNewDiagram = async (folderId?: number, title: string = '') => {
     try {
       setStatusMessage('Creating new diagram...');
       setStatusType('loading');
       
-      // Create a new diagram with empty content
-      const newDiagram = await apiService.createDiagram(emptyDiagram, '');
+      // Create a new diagram with empty content and the provided title
+      let newDiagram;
+      if (folderId !== undefined) {
+        // Create diagram in the specified folder
+        newDiagram = await apiService.createDiagramInFolder(emptyDiagram, title, folderId);
+      } else {
+        // Create diagram in the root folder (default behavior)
+        newDiagram = await apiService.createDiagram(emptyDiagram, title);
+      }
       
       // Update state with the new diagram
       setCode(emptyDiagram);
       setDiagramId(newDiagram.id);
-      setTitle('');
+      setTitle(title);
       setLastSaved(new Date(newDiagram.last_updated));
       
       // Trigger a refresh of the diagram list

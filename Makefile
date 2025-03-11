@@ -33,7 +33,7 @@ setup-backend:
 .PHONY: setup-frontend
 setup-frontend:
 	@echo "Setting up React frontend..."
-	@cd frontend-react && $(NPM) install
+	@cd frontend && $(NPM) install
 	@echo "React frontend setup complete."
 
 # Setup supervisor
@@ -55,7 +55,7 @@ run-backend:
 .PHONY: run-frontend
 run-frontend:
 	@echo "Starting React frontend server on port $(FRONTEND_PORT)..."
-	@cd frontend-react && $(NPM) start
+	@cd frontend && $(NPM) start
 
 # Run both servers (requires two terminal windows)
 .PHONY: run

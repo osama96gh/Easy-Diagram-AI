@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import mermaid from 'mermaid';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -6,12 +7,14 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DownloadIcon from '@mui/icons-material/Download';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import { usePanelContext } from '../contexts/PanelContext';
 
 interface DiagramRendererProps {
   code: string;
   title?: string;
   panelId: string;
+  diagramId?: number | null;
 }
 
 // Constants for zoom and pan
@@ -24,7 +27,8 @@ const PAN_STEP = 50;
  * DiagramRenderer component for rendering mermaid diagrams in the center panel
  * with zoom, pan, and navigation capabilities
  */
-const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId }) => {
+const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId, diagramId }) => {
+  const navigate = useNavigate();
   const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
   const isVisible = isPanelExpanded(panelId);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +126,18 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId 
   const handleResetView = () => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+  };
+
+  // Handle full screen view
+  const handleFullScreen = () => {
+    if (!diagramId) {
+      setError('Cannot open full screen view: Diagram has not been saved');
+      return;
+    }
+    
+    // Open a new window with the full screen view
+    const fullScreenUrl = `${window.location.origin}/diagram/${diagramId}`;
+    window.open(fullScreenUrl, '_blank');
   };
 
   // Handle download diagram as SVG
@@ -315,6 +331,14 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId 
                 title="Download as SVG"
               >
                 <DownloadIcon fontSize="small" />
+              </button>
+              <button 
+                onClick={handleFullScreen} 
+                className="control-button"
+                aria-label="Full screen"
+                title="Full screen"
+              >
+                <FullscreenIcon fontSize="small" />
               </button>
             </div>
           </div>

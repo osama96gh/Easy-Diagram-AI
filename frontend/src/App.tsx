@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import './App.css';
 import CodeEditor from './components/CodeEditor';
 import DiagramRenderer from './components/DiagramRenderer';
 import CommandBox from './components/CommandBox';
 import DiagramList from './components/DiagramList';
+import FullScreenDiagram from './components/FullScreenDiagram';
 import { apiService } from './services/api';
 import { PanelProvider } from './contexts/PanelContext';
 
@@ -302,43 +304,49 @@ function App() {
   };
 
   return (
-    <PanelProvider>
-      <div className="app-container">
-        <div className="main-panel">
-          <CodeEditor 
-            code={code} 
-            title={title}
-            onCodeChange={handleCodeChange}
-            onTitleChange={handleTitleChange}
-            panelId="leftPanel"
-          />
-          <DiagramRenderer 
-            code={code}
-            title={title}
-            panelId="centerPanel"
-          />
-          <DiagramList
-            onSelectDiagram={handleSelectDiagram}
-            onCreateDiagram={handleCreateNewDiagram}
-            onDeleteDiagram={handleDeleteDiagram}
-            currentDiagramId={diagramId}
-            panelId="rightPanel"
-            refreshTrigger={diagramListRefreshTrigger}
-          />
-        </div>
-        <div className="bottom-panel">
-          <CommandBox
-            onSendRequest={handleSendRequest}
-            isProcessing={isProcessing}
-            statusMessage={statusMessage}
-            statusType={statusType}
-            panelId="bottomPanel"
-            isSaving={isSaving}
-            lastSaved={lastSaved}
-          />
-        </div>
-      </div>
-    </PanelProvider>
+    <Routes>
+      <Route path="/diagram/:diagramId" element={<FullScreenDiagram />} />
+      <Route path="/" element={
+        <PanelProvider>
+          <div className="app-container">
+            <div className="main-panel">
+              <CodeEditor 
+                code={code} 
+                title={title}
+                onCodeChange={handleCodeChange}
+                onTitleChange={handleTitleChange}
+                panelId="leftPanel"
+              />
+              <DiagramRenderer 
+                code={code}
+                title={title}
+                panelId="centerPanel"
+                diagramId={diagramId}
+              />
+              <DiagramList
+                onSelectDiagram={handleSelectDiagram}
+                onCreateDiagram={handleCreateNewDiagram}
+                onDeleteDiagram={handleDeleteDiagram}
+                currentDiagramId={diagramId}
+                panelId="rightPanel"
+                refreshTrigger={diagramListRefreshTrigger}
+              />
+            </div>
+            <div className="bottom-panel">
+              <CommandBox
+                onSendRequest={handleSendRequest}
+                isProcessing={isProcessing}
+                statusMessage={statusMessage}
+                statusType={statusType}
+                panelId="bottomPanel"
+                isSaving={isSaving}
+                lastSaved={lastSaved}
+              />
+            </div>
+          </div>
+        </PanelProvider>
+      } />
+    </Routes>
   );
 }
 

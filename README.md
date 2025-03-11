@@ -152,10 +152,16 @@ npm start
 
 ### Diagram Manipulation
 
-- **Zoom**: Use the mouse wheel or the zoom controls in the bottom right
+- **Zoom**: 
+  - Use the mouse wheel or the zoom controls in the bottom right
+  - Use keyboard shortcuts: `+` or `=` to zoom in, `-` to zoom out
+  - Hold down the zoom buttons for continuous zooming
 - **Pan**: Click and drag the diagram to move it around
-- **Reset View**: Click the reset button in the controls
+- **Reset View**: 
+  - Click the reset button in the controls
+  - Use keyboard shortcut: `Ctrl+0` or `Cmd+0` (Mac)
 - **Download**: Click the download button to save the diagram as an SVG file
+- **Full Screen**: Click the full screen button to view the diagram in full screen mode
 
 ## Self-Hosting Guide
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import mermaid from 'mermaid';
 import { apiService } from '../services/api';
@@ -11,7 +11,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 // Constants for zoom and pan
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 3;
+const ZOOM_MAX = 10;
 
 /**
  * FullScreenDiagram component for rendering a diagram in full screen mode
@@ -28,9 +28,12 @@ const FullScreenDiagram: React.FC = () => {
   const [position, setPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+  const [touchDistance, setTouchDistance] = useState<number | null>(null);
   
   const diagramRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoomInIntervalRef = useRef<number | null>(null);
+  const zoomOutIntervalRef = useRef<number | null>(null);
   
   // Load diagram data
   useEffect(() => {
@@ -132,34 +135,131 @@ const FullScreenDiagram: React.FC = () => {
   }, [diagram]);
   
   // Handle zoom in
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     setScale(prevScale => Math.min(prevScale + ZOOM_STEP, ZOOM_MAX));
-  };
+  }, []);
 
   // Handle zoom out
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     setScale(prevScale => Math.max(prevScale - ZOOM_STEP, ZOOM_MIN));
-  };
+  }, []);
+  
+  // Start continuous zoom in
+  const startZoomIn = useCallback(() => {
+    // Clear any existing interval
+    if (zoomInIntervalRef.current) {
+      window.clearInterval(zoomInIntervalRef.current);
+    }
+    
+    // Perform initial zoom immediately
+    handleZoomIn();
+    
+    // Set up continuous zooming
+    zoomInIntervalRef.current = window.setInterval(() => {
+      handleZoomIn();
+    }, 100); // Adjust timing for smooth zooming
+  }, [handleZoomIn]);
+  
+  // Stop zoom in continuous action
+  const stopZoomIn = useCallback(() => {
+    if (zoomInIntervalRef.current) {
+      window.clearInterval(zoomInIntervalRef.current);
+      zoomInIntervalRef.current = null;
+    }
+  }, []);
+  
+  // Start continuous zoom out
+  const startZoomOut = useCallback(() => {
+    // Clear any existing interval
+    if (zoomOutIntervalRef.current) {
+      window.clearInterval(zoomOutIntervalRef.current);
+    }
+    
+    // Perform initial zoom immediately
+    handleZoomOut();
+    
+    // Set up continuous zooming
+    zoomOutIntervalRef.current = window.setInterval(() => {
+      handleZoomOut();
+    }, 100); // Adjust timing for smooth zooming
+  }, [handleZoomOut]);
+  
+  // Stop zoom out continuous action
+  const stopZoomOut = useCallback(() => {
+    if (zoomOutIntervalRef.current) {
+      window.clearInterval(zoomOutIntervalRef.current);
+      zoomOutIntervalRef.current = null;
+    }
+  }, []);
 
   // Handle reset view
-  const handleResetView = () => {
+  const handleResetView = useCallback(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
-  };
+  }, []);
   
   // Handle exit full screen
   const handleExitFullScreen = () => {
     navigate('/');
   };
   
+  // Calculate distance between two touch points
+  const getTouchDistance = (touches: React.TouchList): number => {
+    if (touches.length < 2) return 0;
+    
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+  
+  // Handle touch start for pinch-to-zoom
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      e.stopPropagation();
+      setTouchDistance(getTouchDistance(e.touches));
+    }
+  };
+  
+  // Handle touch move for pinch-to-zoom
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchDistance !== null) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const newDistance = getTouchDistance(e.touches);
+      const delta = newDistance - touchDistance;
+      
+      // Adjust sensitivity of pinch zoom
+      const zoomDelta = delta * 0.01;
+      
+      setScale(prevScale => {
+        const newScale = prevScale + zoomDelta;
+        return Math.min(Math.max(newScale, ZOOM_MIN), ZOOM_MAX);
+      });
+      
+      setTouchDistance(newDistance);
+    }
+  };
+  
+  // Handle touch end
+  const handleTouchEnd = () => {
+    setTouchDistance(null);
+  };
+  
   // Handle mouse wheel for zooming
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-    setScale(prevScale => {
-      const newScale = prevScale + delta;
-      return Math.min(Math.max(newScale, ZOOM_MIN), ZOOM_MAX);
-    });
+    e.stopPropagation();
+    
+    // Only process wheel events that originated from our container
+    if (containerRef.current && containerRef.current.contains(e.target as Node)) {
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+      setScale(prevScale => {
+        const newScale = prevScale + delta;
+        return Math.min(Math.max(newScale, ZOOM_MIN), ZOOM_MAX);
+      });
+    }
   };
 
   // Handle mouse down for dragging
@@ -209,6 +309,61 @@ const FullScreenDiagram: React.FC = () => {
     };
   }, [isDragging]);
   
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only process keyboard events when the component is visible/mounted
+      if (!containerRef.current) return;
+      
+      // Check if the event target is an input element (to avoid capturing keyboard events when typing)
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      // Handle zoom in: + key or = key (same physical key)
+      if (e.key === '+' || e.key === '=' || 
+          (e.key === '+' && (e.ctrlKey || e.metaKey)) || 
+          (e.key === '=' && (e.ctrlKey || e.metaKey))) {
+        e.preventDefault();
+        handleZoomIn();
+      }
+      
+      // Handle zoom out: - key
+      if (e.key === '-' || 
+          (e.key === '-' && (e.ctrlKey || e.metaKey))) {
+        e.preventDefault();
+        handleZoomOut();
+      }
+      
+      // Reset view with 0 key
+      if (e.key === '0' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleResetView();
+      }
+    };
+    
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleZoomIn, handleZoomOut, handleResetView]);
+  
+  // Clean up intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (zoomInIntervalRef.current) {
+        window.clearInterval(zoomInIntervalRef.current);
+      }
+      if (zoomOutIntervalRef.current) {
+        window.clearInterval(zoomOutIntervalRef.current);
+      }
+    };
+  }, []);
+  
   return (
     <div className="fullscreen-container">
       {loading && <div className="fullscreen-loading">Loading diagram...</div>}
@@ -226,8 +381,13 @@ const FullScreenDiagram: React.FC = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             style={{ 
-              cursor: isDragging ? 'grabbing' : 'grab'
+              cursor: isDragging ? 'grabbing' : 'grab',
+              touchAction: 'none', // Prevent browser handling of touch gestures
+              WebkitOverflowScrolling: 'touch' // Improve scrolling on iOS
             }}
           >
             <div 
@@ -244,27 +404,35 @@ const FullScreenDiagram: React.FC = () => {
           <div className="fullscreen-diagram-controls">
             <div className="fullscreen-zoom-controls">
               <button 
-                onClick={handleZoomOut} 
+                onMouseDown={startZoomOut}
+                onMouseUp={stopZoomOut}
+                onMouseLeave={stopZoomOut}
+                onTouchStart={startZoomOut}
+                onTouchEnd={stopZoomOut}
                 className="fullscreen-control-button"
-                aria-label="Zoom out"
-                title="Zoom out"
+                aria-label="Zoom out (- key)"
+                title="Zoom out (- key)"
               >
                 <RemoveIcon fontSize="small" />
               </button>
               <span className="fullscreen-zoom-level">{Math.round(scale * 100)}%</span>
               <button 
-                onClick={handleZoomIn} 
+                onMouseDown={startZoomIn}
+                onMouseUp={stopZoomIn}
+                onMouseLeave={stopZoomIn}
+                onTouchStart={startZoomIn}
+                onTouchEnd={stopZoomIn}
                 className="fullscreen-control-button"
-                aria-label="Zoom in"
-                title="Zoom in"
+                aria-label="Zoom in (+ key)"
+                title="Zoom in (+ key)"
               >
                 <AddIcon fontSize="small" />
               </button>
               <button 
                 onClick={handleResetView} 
                 className="fullscreen-control-button"
-                aria-label="Reset view"
-                title="Reset view"
+                aria-label="Reset view (Ctrl+0)"
+                title="Reset view (Ctrl+0)"
               >
                 <RestartAltIcon fontSize="small" />
               </button>

@@ -40,13 +40,12 @@
 .fullscreen-diagram-title {
   position: fixed;
   top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(255, 255, 255, 0.8);
+  left: 20px;
+  background-color: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
-  padding: 10px 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-size: 18px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
   font-weight: 500;
   color: #2d3748;
   z-index: 100;
@@ -83,12 +82,11 @@
 .fullscreen-diagram-controls {
   position: fixed;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(255, 255, 255, 0.8);
+  left: 20px;
+  background-color: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
   padding: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   z-index: 100;

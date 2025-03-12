@@ -1,0 +1,108 @@
+/* CommandBox styles */
+.command-input-container {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.command-input {
+  flex: 1;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.send-icon-btn {
+  position: absolute;
+  right: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #1976d2;
+}
+
+.saving-status {
+  padding: 5px 10px;
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}
+
+.command-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.send-icon-btn:hover {
+  color: #0d47a1;
+}
+
+.send-icon-btn:disabled {
+  color: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.command-box-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.command-box-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.command-input-container {
+  margin-top: auto;
+}
+
+.status-container {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-message {
+  font-size: 14px;
+}
+
+.status-message.loading {
+  color: #1976d2;
+}
+
+.status-message.error {
+  color: #f44336;
+}
+
+.status-message.success {
+  color: #4caf50;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(25, 118, 210, 0.2);
+  border-top-color: #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

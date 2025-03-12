@@ -1,0 +1,33 @@
+/* MainLayout styles */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.main-panel {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.bottom-panel {
+  height: 150px;
+  min-height: 150px;
+  border-top: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-panel {
+    flex-direction: column;
+  }
+  
+  .bottom-panel {
+    height: 120px;
+    min-height: 120px;
+  }
+}

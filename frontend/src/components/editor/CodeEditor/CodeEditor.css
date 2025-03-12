@@ -1,0 +1,90 @@
+/* CodeEditor styles */
+.code-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.title-input-container {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.title-input-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.diagram-title-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.title-edit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.title-edit-button:hover {
+  color: #000;
+}
+
+.code-textarea-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.editor-actions {
+  display: flex;
+  padding: 5px 10px;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #ddd;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.icon-button:hover {
+  color: #000;
+  background-color: #eee;
+  border-radius: 4px;
+}
+
+.icon {
+  font-size: 16px;
+}
+
+.code-editor {
+  flex: 1;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  border: none;
+  resize: none;
+  outline: none;
+  overflow: auto;
+}

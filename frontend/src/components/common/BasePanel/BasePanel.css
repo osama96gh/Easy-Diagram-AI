@@ -1,0 +1,43 @@
+/* BasePanel styles */
+.editor-panel, .diagram-list-panel, .command-box {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: flex 0.3s ease;
+  position: relative;
+}
+
+.editor-panel-header, .diagram-list-panel-header, .command-box-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.editor-panel-header h2, .diagram-list-panel-header h2, .command-box-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.toggle-arrow {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.toggle-arrow:hover {
+  color: #000;
+}
+
+/* Collapsed panel styles */
+.editor-panel.collapsed, .diagram-list-panel.collapsed, .command-box.collapsed {
+  flex: 0 0 40px !important;
+}

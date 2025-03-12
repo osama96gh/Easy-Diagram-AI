@@ -126,6 +126,12 @@ export const PanelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (anyOtherCollapsed) {
         return `${panel.expandedFlex}`;
       }
+      
+      // If bottom panel is collapsed, use expanded flex for horizontal panels
+      const bottomPanel = panelStates['bottomPanel'];
+      if (bottomPanel && !bottomPanel.isExpanded) {
+        return `${panel.expandedFlex}`;
+      }
     }
     
     // Use default flex for normal cases

@@ -13,11 +13,22 @@
   overflow: hidden;
 }
 
-.bottom-panel {
+/* Bottom panel styling */
+.command-box {
   height: 150px;
   min-height: 150px;
   border-top: 1px solid #ddd;
   background-color: #f9f9f9;
+  transition: height 0.3s ease, min-height 0.3s ease;
+  position: relative;
+}
+
+/* When the bottom panel is collapsed */
+.command-box.collapsed {
+  height: 40px;
+  min-height: 40px;
+  border-top: 1px solid #ddd;
+  overflow: hidden;
 }
 
 /* Responsive adjustments */
@@ -26,7 +37,7 @@
     flex-direction: column;
   }
   
-  .bottom-panel {
+  .command-box {
     height: 120px;
     min-height: 120px;
   }

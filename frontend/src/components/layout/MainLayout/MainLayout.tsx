@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { PanelProvider } from '../../../contexts/PanelContext';
+import { PanelProvider, usePanelContext } from '../../../contexts/PanelContext';
 import { CodeEditor, CommandBox } from '../../editor';
 import { DiagramRenderer } from '../../diagram';
 import { DiagramList } from '../../storage';
@@ -369,42 +369,84 @@ const MainLayout: React.FC = () => {
 
   return (
     <PanelProvider>
-      <div className="app-container">
-        <div className="main-panel">
-          <CodeEditor 
-            code={code} 
-            title={title}
-            onCodeChange={handleCodeChange}
-            onTitleChange={handleTitleChange}
-            panelId="leftPanel"
-          />
-          <DiagramRenderer 
-            code={code}
-            title={title}
-            panelId="centerPanel"
-            diagramId={diagramId}
-          />
-          <DiagramList
-            onSelectDiagram={handleSelectDiagram}
-            onCreateDiagram={handleCreateNewDiagram}
-            onDeleteDiagram={handleDeleteDiagram}
-            currentDiagramId={diagramId}
-            panelId="rightPanel"
-          />
-        </div>
-        <div className="bottom-panel">
-          <CommandBox
-            onSendRequest={handleSendRequest}
-            isProcessing={isProcessing}
-            statusMessage={statusMessage}
-            statusType={statusType}
-            panelId="bottomPanel"
-            isSaving={isSaving}
-            lastSaved={lastSaved}
-          />
-        </div>
-      </div>
+      <MainLayoutContent 
+        code={code}
+        title={title}
+        diagramId={diagramId}
+        onCodeChange={handleCodeChange}
+        onTitleChange={handleTitleChange}
+        onSelectDiagram={handleSelectDiagram}
+        onCreateDiagram={handleCreateNewDiagram}
+        onDeleteDiagram={handleDeleteDiagram}
+        onSendRequest={handleSendRequest}
+        isProcessing={isProcessing}
+        statusMessage={statusMessage}
+        statusType={statusType}
+        isSaving={isSaving}
+        lastSaved={lastSaved}
+      />
     </PanelProvider>
+  );
+};
+
+// Separate component to use the PanelContext
+const MainLayoutContent: React.FC<{
+  code: string;
+  title: string;
+  diagramId: number | null;
+  onCodeChange: (code: string) => void;
+  onTitleChange: (title: string) => void;
+  onSelectDiagram: (id: number) => void;
+  onCreateDiagram: (folderId?: number, title?: string) => void;
+  onDeleteDiagram: (id: number) => void;
+  onSendRequest: (request: string) => Promise<void>;
+  isProcessing: boolean;
+  statusMessage: string | null;
+  statusType: 'loading' | 'error' | 'success' | null;
+  isSaving: boolean;
+  lastSaved: Date | null;
+}> = (props) => {
+  const { isPanelExpanded, togglePanelExpansion } = usePanelContext();
+  const isBottomPanelExpanded = isPanelExpanded('bottomPanel');
+  
+  return (
+    <div className="app-container">
+      <div className="main-panel">
+        <CodeEditor 
+          code={props.code} 
+          title={props.title}
+          onCodeChange={props.onCodeChange}
+          onTitleChange={props.onTitleChange}
+          panelId="leftPanel"
+        />
+        <DiagramRenderer 
+          code={props.code}
+          title={props.title}
+          panelId="centerPanel"
+          diagramId={props.diagramId}
+        />
+        <DiagramList
+          onSelectDiagram={props.onSelectDiagram}
+          onCreateDiagram={props.onCreateDiagram}
+          onDeleteDiagram={props.onDeleteDiagram}
+          currentDiagramId={props.diagramId}
+          panelId="rightPanel"
+        />
+      </div>
+      <div 
+        className={`bottom-panel ${!isBottomPanelExpanded ? 'collapsed' : ''}`}
+      >
+        <CommandBox
+          onSendRequest={props.onSendRequest}
+          isProcessing={props.isProcessing}
+          statusMessage={props.statusMessage}
+          statusType={props.statusType}
+          panelId="bottomPanel"
+          isSaving={props.isSaving}
+          lastSaved={props.lastSaved}
+        />
+      </div>
+    </div>
   );
 };
 

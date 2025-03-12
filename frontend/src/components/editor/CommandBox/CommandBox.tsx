@@ -11,6 +11,7 @@ interface CommandBoxProps {
   panelId: string;
   isSaving?: boolean;
   lastSaved?: Date | null;
+  className?: string;
 }
 
 /**
@@ -23,7 +24,8 @@ const CommandBox: React.FC<CommandBoxProps> = ({
   statusType,
   panelId,
   isSaving = false,
-  lastSaved = null
+  lastSaved = null,
+  className = ''
 }) => {
   const [request, setRequest] = useState('');
 
@@ -59,6 +61,7 @@ const CommandBox: React.FC<CommandBoxProps> = ({
       title="Bottom Panel - Command Box"
       panelId={panelId}
       orientation="vertical"
+      className={className}
     >
       <div className="command-input-container">
         <div className="input-with-icon">

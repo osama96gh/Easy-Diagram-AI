@@ -6,6 +6,8 @@
   background-color: #f9f9f9;
   border-radius: 4px;
   border: 1px solid #e0e0e0;
+  min-width: 0; /* Allows flex item to shrink below content size */
+  width: 100%; /* Ensures the container takes full width of parent */
 }
 
 .diagram-output {

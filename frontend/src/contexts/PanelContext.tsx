@@ -116,25 +116,17 @@ export const PanelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     // For horizontal panels (left, center, right)
     if (panel.orientation === 'horizontal') {
-      // If one of the other horizontal panels is collapsed, use expanded flex
-      const otherHorizontalPanels = Object.values(panelStates).filter(
-        p => p.orientation === 'horizontal' && p.id !== panelId
-      );
-      
-      const anyOtherCollapsed = otherHorizontalPanels.some(p => !p.isExpanded);
-      
-      if (anyOtherCollapsed) {
-        return `${panel.expandedFlex}`;
-      }
-      
-      // If bottom panel is collapsed, use expanded flex for horizontal panels
-      const bottomPanel = panelStates['bottomPanel'];
-      if (bottomPanel && !bottomPanel.isExpanded) {
-        return `${panel.expandedFlex}`;
+      // Make centerPanel (diagram preview) the only one that grows dynamically
+      if (panelId === 'centerPanel') {
+        // Use flex-grow: 1 to make it fill available space
+        return `1 1 auto`;
+      } else {
+        // For leftPanel and rightPanel, use fixed width with no growing
+        return `0 0 auto`;
       }
     }
     
-    // Use default flex for normal cases
+    // Use default flex for vertical panels (bottom panel)
     return `${panel.defaultFlex}`;
   };
 

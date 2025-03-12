@@ -339,13 +339,6 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
           type="error"
         />
         
-        {/* Display diagram title if available */}
-        {title && (
-          <div className="diagram-title">
-            {title}
-          </div>
-        )}
-        
         {/* Diagram container with zoom and pan */}
         <div 
           ref={containerRef}

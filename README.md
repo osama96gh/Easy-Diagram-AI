@@ -1,17 +1,17 @@
-# Diagmarm Builder
+# Easy Diagram AI
 
 A web-based tool for creating and visualizing diagrams using the mermaid.js library, with AI-powered diagram modification capabilities.
 
 ## Overview
 
-Diagmarm Builder provides an intuitive interface for creating and editing mermaid diagrams with three main components:
+Easy Diagram AI provides an intuitive interface for creating and editing mermaid diagrams with three main components:
 - A code editor for writing mermaid syntax
 - A rendering area to display the resulting diagram
 - An AI Assistant for modifying diagrams using natural language requests
 
 ## Demo
 
-![Diagmarm Builder Demo](./demo.gif)
+![Easy Diagram AI Demo](./demo.gif)
 
 ## Features
 
@@ -24,7 +24,7 @@ Diagmarm Builder provides an intuitive interface for creating and editing mermai
 
 ## Prerequisites
 
-Before installing Diagmarm Builder, ensure you have the following:
+Before installing Easy Diagram AI, ensure you have the following:
 
 - **Python 3.8+** - For the backend server
 - **Node.js 14+** - For the frontend application
@@ -37,8 +37,8 @@ Before installing Diagmarm Builder, ensure you have the following:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/diagmarm-builder.git
-cd diagmarm-builder
+git clone https://github.com/yourusername/easy-diagram-ai.git
+cd easy-diagram-ai
 ```
 
 ### 2. Backend Configuration
@@ -125,7 +125,7 @@ npm install
 npm start
 ```
 
-## Using Diagmarm Builder
+## Using Easy Diagram AI
 
 ### Creating a New Diagram
 
@@ -222,7 +222,7 @@ services:
 
 ## Supported Diagram Types
 
-Diagmarm Builder supports all diagram types available in mermaid.js, including:
+Easy Diagram AI supports all diagram types available in mermaid.js, including:
 
 - Flowcharts
 - Sequence diagrams

@@ -1,14 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import mermaid from 'mermaid';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DownloadIcon from '@mui/icons-material/Download';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import { usePanelContext } from '../contexts/PanelContext';
+import BasePanel from './common/BasePanel';
+import StatusMessage from './common/StatusMessage';
 
 interface DiagramRendererProps {
   code: string;
@@ -29,8 +28,6 @@ const PAN_STEP = 50;
  */
 const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId, diagramId }) => {
   const navigate = useNavigate();
-  const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
-  const isVisible = isPanelExpanded(panelId);
   const [error, setError] = useState<string | null>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +70,7 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
     });
   }, []);
 
-  // Render the diagram whenever the code changes or when visibility changes
+  // Render the diagram whenever the code changes
   useEffect(() => {
     const renderDiagram = async () => {
       if (!diagramRef.current || !code.trim()) {
@@ -109,11 +106,8 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
       }
     };
 
-    // Only render if the diagram is visible
-    if (isVisible) {
-      renderDiagram();
-    }
-  }, [code, isVisible]);
+    renderDiagram();
+  }, [code]);
 
   // Handle zoom in
   const handleZoomIn = useCallback(() => {
@@ -347,8 +341,8 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only process keyboard events when the component is visible/mounted
-      if (!containerRef.current || !isVisible) return;
+      // Only process keyboard events when the component is mounted
+      if (!containerRef.current) return;
       
       // Check if the event target is an input element (to avoid capturing keyboard events when typing)
       if (e.target instanceof HTMLInputElement || 
@@ -385,7 +379,7 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleZoomIn, handleZoomOut, handleResetView, isVisible]);
+  }, [handleZoomIn, handleZoomOut, handleResetView]);
   
   // Clean up intervals on unmount
   useEffect(() => {
@@ -400,22 +394,16 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
   }, []);
 
   return (
-    <div 
-      className={`render-panel ${isVisible ? '' : 'collapsed'}`}
-      style={getPanelStyle(panelId)}
+    <BasePanel
+      title="Center Panel - Diagram Preview"
+      panelId={panelId}
+      orientation="horizontal"
     >
-      <div className="render-panel-header">
-        <h2>Center Panel - Diagram Preview</h2>
-        <button 
-          className="toggle-arrow" 
-          onClick={() => togglePanelExpansion(panelId)}
-          aria-label={isVisible ? "Hide diagram preview" : "Show diagram preview"}
-        >
-          {isVisible ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-        </button>
-      </div>
-      <div style={{ display: isVisible ? 'flex' : 'none', flexDirection: 'column', flex: 1 }}>
-        {error && <div className="error-display">{`Error: ${error}`}</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <StatusMessage 
+          message={error ? `Error: ${error}` : null}
+          type="error"
+        />
         
         {/* Display diagram title if available */}
         {title && (
@@ -456,8 +444,7 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
         </div>
         
         {/* Diagram controls as separate element outside the diagram container */}
-        {isVisible && (
-          <div className="diagram-controls-fixed">
+        <div className="diagram-controls-fixed">
             <div className="zoom-controls">
               <button 
                 onMouseDown={startZoomOut}
@@ -510,9 +497,8 @@ const DiagramRenderer: React.FC<DiagramRendererProps> = ({ code, title, panelId,
               </button>
             </div>
           </div>
-        )}
       </div>
-    </div>
+    </BasePanel>
   );
 };
 

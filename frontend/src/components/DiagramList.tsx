@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { apiService, FolderItem, DiagramItem } from '../services/api';
-import { usePanelContext } from '../contexts/PanelContext';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -23,6 +20,8 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import BasePanel from './common/BasePanel';
+import StatusMessage from './common/StatusMessage';
 import './DiagramList.css';
 
 interface DiagramListProps {
@@ -51,8 +50,6 @@ const DiagramList: React.FC<DiagramListProps> = ({
   const [folderDiagrams, setFolderDiagrams] = useState<{[folderId: number]: DiagramItem[]}>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { getPanelStyle, isPanelExpanded, togglePanelExpansion } = usePanelContext();
-  
   // State for confirmation dialogs
   const [showDeleteDiagramConfirm, setShowDeleteDiagramConfirm] = useState<number | null>(null);
   const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState<number | null>(null);
@@ -490,10 +487,48 @@ const DiagramList: React.FC<DiagramListProps> = ({
     );
   };
   
-  const isExpanded = isPanelExpanded(panelId);
-  
   return (
-    <div className={`diagram-list-panel ${isExpanded ? '' : 'collapsed'}`} style={getPanelStyle(panelId)}>
+    <BasePanel
+      title="Diagrams"
+      panelId={panelId}
+      orientation="horizontal"
+      headerContent={
+        <div className="diagram-list-panel-controls">
+          {onCreateDiagram && (
+            <button
+              className="new-diagram-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Find the root folder ID and open the create diagram dialog
+                const rootFolder = folders.find(folder => folder.is_root);
+                if (rootFolder) {
+                  openCreateDiagramDialog(rootFolder.id); // Pre-select the root folder
+                }
+              }}
+              aria-label="Create new diagram"
+              title="Create new diagram"
+            >
+              <AddIcon />
+            </button>
+          )}
+          <button
+            className="new-folder-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Find the root folder ID and open the create folder dialog
+              const rootFolder = folders.find(folder => folder.is_root);
+              if (rootFolder) {
+                openCreateFolderDialog(rootFolder.id); // Pre-select the root folder
+              }
+            }}
+            aria-label="Create new folder"
+            title="Create new folder"
+          >
+            <CreateNewFolderIcon />
+          </button>
+        </div>
+      }
+    >
       {/* Move Diagram Dialog */}
       <Dialog
         open={showMoveDiagramDialog !== null}
@@ -636,61 +671,14 @@ const DiagramList: React.FC<DiagramListProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-      <div className="diagram-list-panel-header">
-        <h2>Diagrams</h2>
-        <div className="diagram-list-panel-controls">
-    {isExpanded && (
-      <>
-        {onCreateDiagram && (
-          <button
-            className="new-diagram-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Find the root folder ID and open the create diagram dialog
-              const rootFolder = folders.find(folder => folder.is_root);
-              if (rootFolder) {
-                openCreateDiagramDialog(rootFolder.id); // Pre-select the root folder
-              }
-            }}
-            aria-label="Create new diagram"
-            title="Create new diagram"
-          >
-            <AddIcon />
-          </button>
-        )}
-        <button
-          className="new-folder-button"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Find the root folder ID and open the create folder dialog
-            const rootFolder = folders.find(folder => folder.is_root);
-            if (rootFolder) {
-              openCreateFolderDialog(rootFolder.id); // Pre-select the root folder
-            }
-          }}
-          aria-label="Create new folder"
-          title="Create new folder"
-        >
-          <CreateNewFolderIcon />
-        </button>
-      </>
-    )}
-          <button 
-            className="toggle-arrow" 
-            onClick={() => togglePanelExpansion(panelId)}
-            aria-label={isExpanded ? "Collapse panel" : "Expand panel"}
-          >
-            {isExpanded ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </button>
-        </div>
-      </div>
-      
-      {isExpanded && (
-        <div className="diagram-list-content">
+      <div className="diagram-list-content">
           {isLoading ? (
             <div className="loading-indicator">Loading...</div>
           ) : error ? (
-            <div className="error-message">{error}</div>
+            <StatusMessage 
+              message={error}
+              type="error"
+            />
           ) : folders.length === 0 ? (
             <div className="empty-list-message">No folders found</div>
           ) : (
@@ -722,8 +710,7 @@ const DiagramList: React.FC<DiagramListProps> = ({
             </ul>
           )}
         </div>
-      )}
-    </div>
+    </BasePanel>
   );
 };
 

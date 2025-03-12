@@ -1,12 +1,16 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-// Define the structure for a panel's state
+// Enhanced panel state interface
 export interface PanelState {
   id: string;
   isExpanded: boolean;
   defaultFlex: number;
   expandedFlex: number;
   collapsedWidth: string;
+  orientation: 'horizontal' | 'vertical';
+  minSize?: string;
+  maxSize?: string;
+  position: 'left' | 'center' | 'right' | 'bottom';
 }
 
 // Define the structure for all panels' states
@@ -20,19 +24,22 @@ interface PanelContextType {
   togglePanelExpansion: (panelId: string) => void;
   getPanelStyle: (panelId: string) => React.CSSProperties;
   isPanelExpanded: (panelId: string) => boolean;
+  resetPanelLayout: () => void;
 }
 
 // Create the context with a default value
 const PanelContext = createContext<PanelContextType | undefined>(undefined);
 
-// Initial panel states
-const initialPanelStates: PanelsState = {
+// Initial panel states factory function
+const createInitialPanelStates = (): PanelsState => ({
   leftPanel: {
     id: 'leftPanel',
     isExpanded: true,
     defaultFlex: 1,
     expandedFlex: 2,
     collapsedWidth: '40px',
+    orientation: 'horizontal',
+    position: 'left'
   },
   centerPanel: {
     id: 'centerPanel',
@@ -40,6 +47,8 @@ const initialPanelStates: PanelsState = {
     defaultFlex: 2,
     expandedFlex: 3,
     collapsedWidth: '40px',
+    orientation: 'horizontal',
+    position: 'center'
   },
   rightPanel: {
     id: 'rightPanel',
@@ -47,6 +56,8 @@ const initialPanelStates: PanelsState = {
     defaultFlex: 1,
     expandedFlex: 2,
     collapsedWidth: '40px',
+    orientation: 'horizontal',
+    position: 'right'
   },
   bottomPanel: {
     id: 'bottomPanel',
@@ -54,12 +65,35 @@ const initialPanelStates: PanelsState = {
     defaultFlex: 1,
     expandedFlex: 1,
     collapsedWidth: '40px',
+    orientation: 'vertical',
+    position: 'bottom'
   },
-};
+});
 
 // Provider component
 export const PanelProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [panelStates, setPanelStates] = useState<PanelsState>(initialPanelStates);
+  const [panelStates, setPanelStates] = useState<PanelsState>(() => {
+    // Try to load saved panel states from localStorage
+    const savedStates = localStorage.getItem('panelStates');
+    if (savedStates) {
+      try {
+        return JSON.parse(savedStates);
+      } catch (e) {
+        console.error('Failed to parse saved panel states:', e);
+      }
+    }
+    return createInitialPanelStates();
+  });
+
+  // Save panel states to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('panelStates', JSON.stringify(panelStates));
+  }, [panelStates]);
+
+  // Reset panel layout to default
+  const resetPanelLayout = () => {
+    setPanelStates(createInitialPanelStates());
+  };
 
   // Toggle a panel's expansion state
   const togglePanelExpansion = (panelId: string) => {
@@ -80,11 +114,16 @@ export const PanelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return `0 0 ${panel.collapsedWidth}`;
     }
     
-    // For horizontal panels (left and center)
-    if (panelId === 'leftPanel' || panelId === 'centerPanel') {
-      // If the other horizontal panel is collapsed, use expanded flex
-      const otherPanelId = panelId === 'leftPanel' ? 'centerPanel' : 'leftPanel';
-      if (!panelStates[otherPanelId].isExpanded) {
+    // For horizontal panels (left, center, right)
+    if (panel.orientation === 'horizontal') {
+      // If one of the other horizontal panels is collapsed, use expanded flex
+      const otherHorizontalPanels = Object.values(panelStates).filter(
+        p => p.orientation === 'horizontal' && p.id !== panelId
+      );
+      
+      const anyOtherCollapsed = otherHorizontalPanels.some(p => !p.isExpanded);
+      
+      if (anyOtherCollapsed) {
         return `${panel.expandedFlex}`;
       }
     }
@@ -97,9 +136,22 @@ export const PanelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const getPanelStyle = (panelId: string): React.CSSProperties => {
     const panel = panelStates[panelId];
     
-    return {
+    const style: React.CSSProperties = {
       flex: calculateFlexValue(panelId),
     };
+    
+    // Add min/max size constraints if defined
+    if (panel.minSize) {
+      style.minWidth = panel.orientation === 'horizontal' ? panel.minSize : undefined;
+      style.minHeight = panel.orientation === 'vertical' ? panel.minSize : undefined;
+    }
+    
+    if (panel.maxSize) {
+      style.maxWidth = panel.orientation === 'horizontal' ? panel.maxSize : undefined;
+      style.maxHeight = panel.orientation === 'vertical' ? panel.maxSize : undefined;
+    }
+    
+    return style;
   };
 
   // Check if a panel is expanded
@@ -113,6 +165,7 @@ export const PanelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     togglePanelExpansion,
     getPanelStyle,
     isPanelExpanded,
+    resetPanelLayout,
   };
 
   return (

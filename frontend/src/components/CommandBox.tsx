@@ -1,8 +1,7 @@
 import React, { useState, KeyboardEvent } from 'react';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import SendIcon from '@mui/icons-material/Send';
-import { usePanelContext } from '../contexts/PanelContext';
+import BasePanel from './common/BasePanel';
+import StatusMessage from './common/StatusMessage';
 
 interface CommandBoxProps {
   onSendRequest: (request: string) => Promise<void>;
@@ -26,8 +25,6 @@ const CommandBox: React.FC<CommandBoxProps> = ({
   isSaving = false,
   lastSaved = null
 }) => {
-  const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
-  const isVisible = isPanelExpanded(panelId);
   const [request, setRequest] = useState('');
 
   /**
@@ -58,23 +55,12 @@ const CommandBox: React.FC<CommandBoxProps> = ({
   };
 
   return (
-    <div 
-      className={`command-box ${isVisible ? '' : 'collapsed'}`}
-      style={getPanelStyle(panelId)}
+    <BasePanel
+      title="Bottom Panel - Command Box"
+      panelId={panelId}
+      orientation="vertical"
     >
-      <div className="command-box-header">
-        <h2>Bottom Panel - Command Box</h2>
-        <button 
-          className="toggle-arrow" 
-          onClick={() => togglePanelExpansion(panelId)}
-          aria-label={isVisible ? "Hide command box" : "Show command box"}
-        >
-          {isVisible ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
-        </button>
-      </div>
-      {isVisible && (
-        <>
-          <div className="command-input-container">
+      <div className="command-input-container">
             <div className="input-with-icon">
               <input
                 type="text"
@@ -95,24 +81,22 @@ const CommandBox: React.FC<CommandBoxProps> = ({
               </button>
             </div>
           </div>
-          {statusMessage && (
-            <div className={`status ${statusType || ''}`} style={{ display: 'block' }}>
-              {statusMessage}
-            </div>
-          )}
+      <StatusMessage 
+        message={statusMessage}
+        type={statusType}
+        autoHide={statusType === 'success'}
+      />
           
-          {/* Saving status display */}
-          <div className="saving-status">
-            {isSaving && <span className="saving-indicator">Saving diagram...</span>}
-            {!isSaving && lastSaved && (
-              <span className="last-saved">
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+      {/* Saving status display */}
+      <div className="saving-status">
+        {isSaving && <span className="saving-indicator">Saving diagram...</span>}
+        {!isSaving && lastSaved && (
+          <span className="last-saved">
+            Last saved: {lastSaved.toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+    </BasePanel>
   );
 };
 

@@ -5,11 +5,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
-import { usePanelContext } from '../contexts/PanelContext';
+import BasePanel from './common/BasePanel';
 
 interface CodeEditorProps {
   code: string;
@@ -23,8 +21,6 @@ interface CodeEditorProps {
  * CodeEditor component for editing mermaid code in the left panel
  */
 const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange, onTitleChange, panelId }) => {
-  const { isPanelExpanded, togglePanelExpansion, getPanelStyle } = usePanelContext();
-  const isVisible = isPanelExpanded(panelId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isTitleEditable, setIsTitleEditable] = useState<boolean>(false);
   const [editableTitle, setEditableTitle] = useState<string>(title);
@@ -152,9 +148,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
   };
 
   return (
-    <div 
-      className={`editor-panel ${isVisible ? '' : 'collapsed'}`}
-      style={getPanelStyle(panelId)}
+    <BasePanel
+      title="Left Panel - Code Editor"
+      panelId={panelId}
+      orientation="horizontal"
     >
       {/* Clear confirmation dialog */}
       <Dialog
@@ -178,18 +175,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
           </Button>
         </DialogActions>
       </Dialog>
-      <div className="editor-panel-header">
-        <h2>Left Panel - Code Editor</h2>
-        <button 
-          className="toggle-arrow" 
-          onClick={() => togglePanelExpansion(panelId)}
-          aria-label={isVisible ? "Hide code editor" : "Show code editor"}
-        >
-          {isVisible ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-        </button>
-      </div>
-      {isVisible && (
-        <div className="code-editor-container">
+      <div className="code-editor-container">
           <div className="title-input-container">
             <div className="title-input-wrapper">
               <input
@@ -248,8 +234,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, title = '', onCodeChange,
             />
           </div>
         </div>
-      )}
-    </div>
+    </BasePanel>
   );
 };
 

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { PanelProvider } from '../../../contexts/PanelContext';
 import { CodeEditor, CommandBox } from '../../editor';
 import { DiagramRenderer } from '../../diagram';
 import { DiagramList } from '../../storage';
 import { apiService } from '../../../services/api';
+import { useDiagramContext } from '../../../contexts/DiagramContext';
 import './MainLayout.css';
 
 /**
@@ -29,9 +30,16 @@ const MainLayout: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'loading' | 'error' | 'success' | null>(null);
   const [isApiAvailable, setIsApiAvailable] = useState<boolean>(true);
-  const [diagramListRefreshTrigger, setDiagramListRefreshTrigger] = useState<number>(0);
+  
+  // Get diagram context
+  const { 
+    selectDiagram: contextSelectDiagram,
+    createDiagram: contextCreateDiagram,
+    deleteDiagram: contextDeleteDiagram,
+    refreshExpandedFolders
+  } = useDiagramContext();
 
-  // Check if the API is available and load the latest diagram when the component mounts
+  // Check if the API is available and load the selected or latest diagram when the component mounts
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -46,7 +54,45 @@ const MainLayout: React.FC = () => {
           return;
         }
 
-        // Try to load the latest diagram
+        // Check if there's a selected diagram ID in localStorage
+        const savedDiagramId = localStorage.getItem('selectedDiagramId');
+        
+        if (savedDiagramId) {
+          // Try to load the selected diagram
+          try {
+            const diagramId = parseInt(savedDiagramId, 10);
+            console.log('Loading selected diagram:', diagramId);
+            
+            const selectedDiagram = await apiService.getDiagram(diagramId);
+            
+            if (selectedDiagram && selectedDiagram.content) {
+              console.log('Selected diagram loaded:', selectedDiagram);
+              setCode(selectedDiagram.content);
+              setDiagramId(selectedDiagram.id);
+              setLastSaved(new Date(selectedDiagram.last_updated));
+              // Set the title if available
+              if (selectedDiagram.name) {
+                setTitle(selectedDiagram.name);
+              }
+              setStatusMessage('Selected diagram loaded');
+              setStatusType('success');
+              
+              // Hide success message after a few seconds
+              setTimeout(() => {
+                setStatusMessage(null);
+                setStatusType(null);
+              }, 3000);
+              
+              // Exit early since we've loaded the selected diagram
+              return;
+            }
+          } catch (error) {
+            console.error('Error loading selected diagram:', error);
+            // Continue with loading the latest diagram if loading the selected diagram fails
+          }
+        }
+        
+        // If no selected diagram or loading it failed, try to load the latest diagram
         try {
           console.log('Loading latest diagram...');
           const latestDiagram = await apiService.getLatestDiagram();
@@ -188,11 +234,19 @@ const MainLayout: React.FC = () => {
       // Create a new diagram with empty content and the provided title
       let newDiagram;
       if (folderId !== undefined) {
-        // Create diagram in the specified folder
-        newDiagram = await apiService.createDiagramInFolder(emptyDiagram, title, folderId);
+        // Create diagram in the specified folder using context
+        newDiagram = await contextCreateDiagram(folderId, emptyDiagram, title);
       } else {
         // Create diagram in the root folder (default behavior)
-        newDiagram = await apiService.createDiagram(emptyDiagram, title);
+        const rootFolder = await apiService.getFolders().then(folders => 
+          folders.find(folder => folder.is_root)
+        );
+        
+        if (rootFolder) {
+          newDiagram = await contextCreateDiagram(rootFolder.id, emptyDiagram, title);
+        } else {
+          newDiagram = await apiService.createDiagram(emptyDiagram, title);
+        }
       }
       
       // Update state with the new diagram
@@ -201,8 +255,8 @@ const MainLayout: React.FC = () => {
       setTitle(title);
       setLastSaved(new Date(newDiagram.last_updated));
       
-      // Trigger a refresh of the diagram list
-      setDiagramListRefreshTrigger(prev => prev + 1);
+      // Refresh folders to show the new diagram
+      refreshExpandedFolders();
       
       // Show success message
       setStatusMessage('New diagram created successfully');
@@ -225,6 +279,9 @@ const MainLayout: React.FC = () => {
     try {
       setStatusMessage('Loading diagram...');
       setStatusType('loading');
+      
+      // Update context with selected diagram
+      contextSelectDiagram(selectedDiagramId);
       
       // Fetch the selected diagram
       const diagram = await apiService.getDiagram(selectedDiagramId);
@@ -257,8 +314,8 @@ const MainLayout: React.FC = () => {
       setStatusMessage('Deleting diagram...');
       setStatusType('loading');
       
-      // Delete the diagram
-      await apiService.deleteDiagram(diagramIdToDelete);
+      // Delete the diagram using context
+      await contextDeleteDiagram(diagramIdToDelete);
       
       // If the deleted diagram was the current one
       if (diagramId === diagramIdToDelete) {
@@ -292,8 +349,8 @@ const MainLayout: React.FC = () => {
         setStatusMessage('Diagram deleted successfully');
       }
       
-      // Trigger a refresh of the diagram list
-      setDiagramListRefreshTrigger(prev => prev + 1);
+      // Refresh folders to update the UI
+      refreshExpandedFolders();
       
       // Set status type to success
       setStatusType('success');
@@ -333,7 +390,6 @@ const MainLayout: React.FC = () => {
             onDeleteDiagram={handleDeleteDiagram}
             currentDiagramId={diagramId}
             panelId="rightPanel"
-            refreshTrigger={diagramListRefreshTrigger}
           />
         </div>
         <div className="bottom-panel">

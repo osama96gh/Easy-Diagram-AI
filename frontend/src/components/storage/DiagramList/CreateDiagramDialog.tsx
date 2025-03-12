@@ -11,67 +11,79 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormHelperText from '@mui/material/FormHelperText';
 
-interface CreateFolderDialogProps {
+interface CreateDiagramDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreateFolder: (name: string, parentId: number | null) => void;
+  onCreateDiagram: (name: string, folderId: number) => void;
   folders?: Array<{id: number, name: string, depth: number}>;
-  initialParentId?: number | null;
+  initialFolderId?: number | null;
 }
 
 /**
- * CreateFolderDialog component for creating a new folder
+ * CreateDiagramDialog component for creating a new diagram
  */
-const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
+const CreateDiagramDialog: React.FC<CreateDiagramDialogProps> = ({
   open,
   onClose,
-  onCreateFolder,
+  onCreateDiagram,
   folders = [],
-  initialParentId = null
+  initialFolderId = null
 }) => {
-  const [folderName, setFolderName] = useState<string>('');
+  const [diagramName, setDiagramName] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [parentId, setParentId] = useState<number | null>(initialParentId);
+  const [folderId, setFolderId] = useState<number | null>(initialFolderId);
 
-  // Reset state when dialog opens with new initialParentId
+  // Reset state when dialog opens with new initialFolderId
   useEffect(() => {
     if (open) {
-      setParentId(initialParentId);
+      setFolderId(initialFolderId);
     }
-  }, [open, initialParentId]);
+  }, [open, initialFolderId]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFolderName(e.target.value);
+    setDiagramName(e.target.value);
     if (e.target.value.trim()) {
       setError(null);
     }
   };
 
-  // Handle parent folder selection
-  const handleParentChange = (e: SelectChangeEvent) => {
+  // Handle folder selection
+  const handleFolderChange = (e: SelectChangeEvent) => {
     const value = e.target.value;
-    setParentId(value === 'null' ? null : Number(value));
+    setFolderId(value === 'null' ? null : Number(value));
   };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!folderName.trim()) {
-      setError('Folder name cannot be empty');
+    if (!diagramName.trim()) {
+      setError('Diagram name cannot be empty');
       return;
     }
     
-    onCreateFolder(folderName.trim(), parentId);
+    // Find the root folder ID if folderId is null
+    if (folderId === null) {
+      const rootFolder = folders.find(folder => folder.depth === 0);
+      if (rootFolder) {
+        onCreateDiagram(diagramName.trim(), rootFolder.id);
+      } else {
+        setError('No valid folder selected');
+        return;
+      }
+    } else {
+      onCreateDiagram(diagramName.trim(), folderId);
+    }
+    
     handleClose();
   };
 
   // Handle dialog close
   const handleClose = () => {
-    setFolderName('');
+    setDiagramName('');
     setError(null);
-    setParentId(initialParentId);
+    setFolderId(initialFolderId);
     onClose();
   };
 
@@ -82,39 +94,39 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} aria-labelledby="create-folder-dialog-title">
+    <Dialog open={open} onClose={handleClose} aria-labelledby="create-diagram-dialog-title">
       <form onSubmit={handleSubmit}>
-        <DialogTitle id="create-folder-dialog-title">Create New Folder</DialogTitle>
+        <DialogTitle id="create-diagram-dialog-title">Create New Diagram</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            id="folder-name"
-            label="Folder Name"
+            id="diagram-name"
+            label="Diagram Name"
             type="text"
             fullWidth
-            value={folderName}
+            value={diagramName}
             onChange={handleInputChange}
             error={!!error}
             helperText={error}
           />
           
           <FormControl fullWidth margin="normal">
-            <InputLabel id="parent-folder-label">Parent Folder</InputLabel>
+            <InputLabel id="folder-location-label">Location</InputLabel>
             <Select
-              labelId="parent-folder-label"
-              id="parent-folder"
-              value={parentId === null ? 'null' : String(parentId)}
-              onChange={handleParentChange}
-              label="Parent Folder"
+              labelId="folder-location-label"
+              id="folder-location"
+              value={folderId === null ? 'null' : String(folderId)}
+              onChange={handleFolderChange}
+              label="Location"
             >
               {folders.map((folder) => (
-                <MenuItem key={folder.id} value={folder.depth === 0 ? 'null' : String(folder.id)}>
+                <MenuItem key={folder.id} value={String(folder.id)}>
                   {getFolderDisplayName(folder)}
                 </MenuItem>
               ))}
             </Select>
-            <FormHelperText>Select where to create the new folder</FormHelperText>
+            <FormHelperText>Select where to create the new diagram</FormHelperText>
           </FormControl>
         </DialogContent>
         <DialogActions>
@@ -130,4 +142,4 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   );
 };
 
-export default CreateFolderDialog;
+export default CreateDiagramDialog;

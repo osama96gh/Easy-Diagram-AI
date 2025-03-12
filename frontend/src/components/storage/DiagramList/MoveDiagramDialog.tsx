@@ -12,16 +12,16 @@ import ListItemButton from '@mui/material/ListItemButton';
 import FolderIcon from '@mui/icons-material/Folder';
 
 // Define folder structure for the dialog
-interface FolderStructure {
+interface FolderItem {
   id: number;
   name: string;
-  subfolders?: FolderStructure[];
+  depth: number;
 }
 
 interface MoveDiagramDialogProps {
   open: boolean;
   diagramId: number | null;
-  folders: FolderStructure[];
+  folders: FolderItem[];
   onClose: () => void;
   onMove: (diagramId: number, folderId: number) => void;
 }
@@ -58,11 +58,16 @@ const MoveDiagramDialog: React.FC<MoveDiagramDialogProps> = ({
     }
   };
 
-  // Recursive function to render folders
-  const renderFolders = (foldersList: FolderStructure[], level = 0) => {
-    return foldersList.map(folder => (
-      <React.Fragment key={folder.id}>
-        <ListItem disablePadding style={{ paddingLeft: `${level * 16}px` }}>
+  // Function to render folders from flattened structure
+  const renderFolders = () => {
+    return folders
+      .filter(folder => folder.depth > 0) // Filter out root folder as it's handled separately
+      .map(folder => (
+        <ListItem 
+          key={folder.id} 
+          disablePadding 
+          style={{ paddingLeft: `${folder.depth * 16}px` }}
+        >
           <ListItemButton 
             onClick={() => handleSelectFolder(folder.id)}
             selected={selectedFolderId === folder.id}
@@ -70,12 +75,16 @@ const MoveDiagramDialog: React.FC<MoveDiagramDialogProps> = ({
             <ListItemIcon>
               <FolderIcon />
             </ListItemIcon>
-            <ListItemText primary={folder.name} />
+            <ListItemText 
+              primary={
+                <span>
+                  {folder.depth > 1 ? '└─ ' : ''}{folder.name}
+                </span>
+              } 
+            />
           </ListItemButton>
         </ListItem>
-        {folder.subfolders && folder.subfolders.length > 0 && renderFolders(folder.subfolders, level + 1)}
-      </React.Fragment>
-    ));
+      ));
   };
 
   return (
@@ -83,19 +92,25 @@ const MoveDiagramDialog: React.FC<MoveDiagramDialogProps> = ({
       <DialogTitle id="move-diagram-dialog-title">Move Diagram to Folder</DialogTitle>
       <DialogContent>
         <List>
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => handleSelectFolder(null)}
-              selected={selectedFolderId === null}
-            >
-              <ListItemIcon>
-                <FolderIcon />
-              </ListItemIcon>
-              <ListItemText primary="Root (No Folder)" />
-            </ListItemButton>
-          </ListItem>
           {folders.length > 0 ? (
-            renderFolders(folders)
+            <>
+              {/* Root folder */}
+              {folders.find(f => f.depth === 0) && (
+                <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => handleSelectFolder(folders.find(f => f.depth === 0)?.id || null)}
+                    selected={selectedFolderId === folders.find(f => f.depth === 0)?.id}
+                  >
+                    <ListItemIcon>
+                      <FolderIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={folders.find(f => f.depth === 0)?.name || "Root Folder"} />
+                  </ListItemButton>
+                </ListItem>
+              )}
+              {/* Other folders */}
+              {renderFolders()}
+            </>
           ) : (
             <ListItem>
               <ListItemText primary="No folders available" />

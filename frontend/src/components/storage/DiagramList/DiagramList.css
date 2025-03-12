@@ -11,7 +11,8 @@
 }
 
 .new-diagram-button,
-.new-folder-button {
+.new-folder-button,
+.refresh-button {
   background: none;
   border: none;
   cursor: pointer;
@@ -24,7 +25,8 @@
 }
 
 .new-diagram-button:hover,
-.new-folder-button:hover {
+.new-folder-button:hover,
+.refresh-button:hover {
   background-color: rgba(25, 118, 210, 0.1);
 }
 
@@ -50,6 +52,17 @@
 
 .folder-header:hover {
   background-color: #e0e0e0;
+}
+
+.folder-header.refreshing {
+  background-color: rgba(25, 118, 210, 0.05);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { background-color: rgba(25, 118, 210, 0.05); }
+  50% { background-color: rgba(25, 118, 210, 0.15); }
+  100% { background-color: rgba(25, 118, 210, 0.05); }
 }
 
 .folder-header-content {
@@ -180,6 +193,15 @@
 .loading-indicator {
   padding: 16px;
   text-align: center;
+  color: #1976d2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Folder refreshing indicator */
+.folder-header-content .MuiCircularProgress-root {
   color: #1976d2;
 }
 

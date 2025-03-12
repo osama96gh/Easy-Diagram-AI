@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiService, FolderItem, DiagramItem } from '../services/api';
 
 // Define normalized data structure types
@@ -24,7 +24,7 @@ export interface UseDiagramStorageReturn {
   normalizedState: NormalizedFolderState;
   flattenedFolders: Array<{ id: number; name: string; depth: number }>;
   fetchFolders: () => Promise<void>;
-  fetchDiagramsForFolder: (folderId: number | null) => Promise<void>;
+  fetchDiagramsForFolder: (folderId: number | null, forceRefresh?: boolean) => Promise<void>;
   createFolder: (name: string, parentId: number | null) => Promise<void>;
   deleteFolder: (folderId: number) => Promise<void>;
   moveDiagram: (diagramId: number, targetFolderId: number) => Promise<void>;
@@ -32,6 +32,8 @@ export interface UseDiagramStorageReturn {
   toggleFolderExpansion: (folderId: number) => void;
   getDiagramsForFolder: (folderId: number) => DiagramItem[];
   getRootFolder: () => FolderItem | null;
+  isFolderRefreshing: (folderId: number) => boolean;
+  refreshExpandedFolders: () => Promise<void>;
 }
 
 // Initial state for normalized data
@@ -45,6 +47,29 @@ const initialNormalizedState: NormalizedFolderState = {
   loadedFolders: [],
 };
 
+// Load expanded folders from localStorage
+const loadExpandedFolders = (): number[] => {
+  try {
+    const savedState = localStorage.getItem('expandedFolders');
+    if (!savedState) return [];
+    
+    const parsedState = JSON.parse(savedState);
+    // Validate that we have an array of numbers
+    if (Array.isArray(parsedState) && parsedState.every(item => typeof item === 'number')) {
+      return parsedState;
+    } else {
+      console.warn('Invalid format in localStorage for expandedFolders, resetting');
+      localStorage.removeItem('expandedFolders');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error loading expanded folders from localStorage:', error);
+    // Clean up potentially corrupted data
+    localStorage.removeItem('expandedFolders');
+    return [];
+  }
+};
+
 /**
  * Custom hook for managing diagram and folder data
  */
@@ -52,7 +77,9 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [normalizedState, setNormalizedState] = useState<NormalizedFolderState>(initialNormalizedState);
-  const [expandedFolders, setExpandedFolders] = useState<number[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<number[]>(loadExpandedFolders());
+  const [refreshingFolders, setRefreshingFolders] = useState<number[]>([]);
+  const lastRefreshTimeRef = useRef<{[folderId: number]: number}>({});
   const [flattenedFolders, setFlattenedFolders] = useState<Array<{ id: number; name: string; depth: number }>>([]);
 
   /**
@@ -137,13 +164,16 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
   /**
    * Fetch diagrams for a specific folder
    */
-  const fetchDiagramsForFolder = useCallback(async (folderId: number | null) => {
+  const fetchDiagramsForFolder = useCallback(async (folderId: number | null, forceRefresh: boolean = false) => {
     // Skip if folderId is null
     if (folderId === null) return;
     
     try {
-      // Only fetch if we haven't already loaded this folder's diagrams
-      if (!normalizedState.loadedFolders.includes(folderId)) {
+      // Only fetch if we haven't already loaded this folder's diagrams or if force refresh is requested
+      if (forceRefresh || !normalizedState.loadedFolders.includes(folderId)) {
+        // Mark folder as refreshing
+        setRefreshingFolders(prev => [...prev, folderId]);
+        
         const diagrams = await apiService.getDiagramsInFolder(folderId);
         
         setNormalizedState(prev => ({
@@ -152,12 +182,22 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
             ...prev.diagramsByFolderId,
             [folderId]: diagrams
           },
-          loadedFolders: [...prev.loadedFolders, folderId]
+          loadedFolders: prev.loadedFolders.includes(folderId) 
+            ? prev.loadedFolders 
+            : [...prev.loadedFolders, folderId]
         }));
+        
+        // Update last refresh time
+        lastRefreshTimeRef.current[folderId] = Date.now();
+        
+        // Remove from refreshing state
+        setRefreshingFolders(prev => prev.filter(id => id !== folderId));
       }
     } catch (err) {
       console.error(`Error fetching diagrams for folder ${folderId}:`, err);
       setError(`Failed to load diagrams for folder ${folderId}`);
+      // Remove from refreshing state even if there's an error
+      setRefreshingFolders(prev => prev.filter(id => id !== folderId));
     }
   }, [normalizedState.loadedFolders]);
 
@@ -245,22 +285,47 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
   }, [fetchFolders]);
 
   /**
+   * Refresh diagrams for all expanded folders
+   */
+  const refreshExpandedFolders = useCallback(async () => {
+    for (const folderId of expandedFolders) {
+      // Only refresh folders that haven't been refreshed in the last 5 seconds
+      const lastRefreshTime = lastRefreshTimeRef.current[folderId] || 0;
+      const now = Date.now();
+      if (now - lastRefreshTime > 5000) {
+        await fetchDiagramsForFolder(folderId, true);
+      }
+    }
+  }, [expandedFolders, fetchDiagramsForFolder]);
+
+  /**
    * Move a diagram to a folder
    */
   const moveDiagram = useCallback(async (diagramId: number, targetFolderId: number) => {
     try {
+      // Find the source folder ID
+      let sourceFolderId: number | null = null;
+      
+      // Search through all loaded folders to find which one contains the diagram
+      Object.entries(normalizedState.diagramsByFolderId).forEach(([folderId, diagrams]) => {
+        if (diagrams.some(diagram => diagram.id === diagramId)) {
+          sourceFolderId = parseInt(folderId);
+        }
+      });
+      
       await apiService.moveDiagram(diagramId, targetFolderId);
       
-      // Refresh diagrams for all folders we have loaded
-      const folderIds = normalizedState.loadedFolders;
-      for (const folderId of folderIds) {
-        await fetchDiagramsForFolder(folderId);
+      // Only refresh the source and target folders
+      if (sourceFolderId !== null) {
+        await fetchDiagramsForFolder(sourceFolderId, true);
       }
+      await fetchDiagramsForFolder(targetFolderId, true);
+      
     } catch (err) {
       console.error('Error moving diagram:', err);
       setError('Failed to move diagram');
     }
-  }, [fetchDiagramsForFolder, normalizedState.loadedFolders]);
+  }, [fetchDiagramsForFolder, normalizedState.diagramsByFolderId]);
 
   /**
    * Check if a folder is expanded
@@ -274,18 +339,42 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
    */
   const toggleFolderExpansion = useCallback((folderId: number) => {
     setExpandedFolders(prev => {
+      let newState;
       if (prev.includes(folderId)) {
-        return prev.filter(id => id !== folderId);
+        newState = prev.filter(id => id !== folderId);
       } else {
         // Fetch diagrams for this folder if we're expanding it and haven't loaded them yet
         if (!normalizedState.loadedFolders.includes(folderId)) {
           // We know folderId is not null here since it's a parameter of type number
           fetchDiagramsForFolder(folderId);
+        } else {
+          // If already loaded but might be stale, refresh
+          const lastRefreshTime = lastRefreshTimeRef.current[folderId] || 0;
+          const now = Date.now();
+          if (now - lastRefreshTime > 30000) { // 30 seconds
+            fetchDiagramsForFolder(folderId, true);
+          }
         }
-        return [...prev, folderId];
+        newState = [...prev, folderId];
       }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('expandedFolders', JSON.stringify(newState));
+      } catch (error) {
+        console.error('Error saving expanded folders to localStorage:', error);
+      }
+      
+      return newState;
     });
   }, [fetchDiagramsForFolder, normalizedState.loadedFolders]);
+
+  /**
+   * Check if a folder is currently refreshing
+   */
+  const isFolderRefreshing = useCallback((folderId: number): boolean => {
+    return refreshingFolders.includes(folderId);
+  }, [refreshingFolders]);
 
   /**
    * Get diagrams for a specific folder
@@ -311,11 +400,27 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
   useEffect(() => {
     fetchFolders();
     
-    // Set up interval to refresh the data periodically
-    const intervalId = setInterval(fetchFolders, 30000); // Refresh every 30 seconds
+    // Set up interval to refresh the folders periodically
+    const folderIntervalId = setInterval(fetchFolders, 30000); // Refresh every 30 seconds
     
-    return () => clearInterval(intervalId);
-  }, [fetchFolders, refreshTrigger]);
+    // Set up interval to refresh expanded folders more frequently
+    const expandedFoldersIntervalId = setInterval(refreshExpandedFolders, 10000); // Refresh every 10 seconds
+    
+    return () => {
+      clearInterval(folderIntervalId);
+      clearInterval(expandedFoldersIntervalId);
+    };
+  }, [fetchFolders, refreshExpandedFolders, refreshTrigger]);
+
+  // Restore expanded folders on initial load
+  useEffect(() => {
+    // For each expanded folder, ensure its diagrams are loaded
+    expandedFolders.forEach(folderId => {
+      if (!normalizedState.loadedFolders.includes(folderId)) {
+        fetchDiagramsForFolder(folderId);
+      }
+    });
+  }, [expandedFolders, fetchDiagramsForFolder, normalizedState.loadedFolders]);
 
   return {
     isLoading,
@@ -331,6 +436,8 @@ export const useDiagramStorage = (refreshTrigger = 0): UseDiagramStorageReturn =
     toggleFolderExpansion,
     getDiagramsForFolder,
     getRootFolder,
+    isFolderRefreshing,
+    refreshExpandedFolders
   };
 };
 

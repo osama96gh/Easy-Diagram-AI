@@ -22,6 +22,7 @@ interface DiagramState {
   error: string | null;
   refreshingFolders: number[];
   flattenedFolders: Array<{ id: number; name: string; depth: number }>;
+  dataLoaded: boolean; // Flag to track if backend data has been loaded
 }
 
 // Define the actions our reducer will handle
@@ -80,6 +81,7 @@ const initialState: DiagramState = {
   error: null,
   refreshingFolders: [],
   flattenedFolders: [],
+  dataLoaded: false,
 };
 
 // Load expanded folders from localStorage
@@ -94,20 +96,28 @@ const loadExpandedFolders = (): number[] => {
       return parsedState;
     } else {
       console.warn('Invalid format in localStorage for expandedFolders, resetting');
-      localStorage.removeItem('expandedFolders');
+      // Don't remove the data, just return empty array
       return [];
     }
   } catch (error) {
     console.error('Error loading expanded folders from localStorage:', error);
-    // Clean up potentially corrupted data
-    localStorage.removeItem('expandedFolders');
+    // Don't remove the data on parse error, just return empty array
     return [];
   }
 };
 
 // Validate expanded folders against existing folders
-const validateExpandedFolders = (expandedFolders: number[], folders: { [id: number]: FolderItem }): number[] => {
-  // Filter out any folder IDs that don't exist in the current folders
+const validateExpandedFolders = (
+  expandedFolders: number[], 
+  folders: { [id: number]: FolderItem },
+  isDataLoaded: boolean
+): number[] => {
+  // During initial load or if folders object is empty, trust the localStorage data
+  if (!isDataLoaded || Object.keys(folders).length === 0) {
+    return expandedFolders;
+  }
+  
+  // Only after we have folder data, validate
   return expandedFolders.filter(id => folders[id] !== undefined);
 };
 
@@ -122,13 +132,12 @@ const loadSelectedDiagram = (): number | null => {
       return parsedState;
     } else {
       console.warn('Invalid format in localStorage for selectedDiagramId, resetting');
-      localStorage.removeItem('selectedDiagramId');
+      // Don't remove the data, just return null
       return null;
     }
   } catch (error) {
     console.error('Error loading selected diagram from localStorage:', error);
-    // Clean up potentially corrupted data
-    localStorage.removeItem('selectedDiagramId');
+    // Don't remove the data on parse error, just return null
     return null;
   }
 };
@@ -136,9 +145,16 @@ const loadSelectedDiagram = (): number | null => {
 // Validate selected diagram against existing diagrams
 const validateSelectedDiagram = (
   selectedDiagramId: number | null, 
-  diagramsByFolderId: { [folderId: number]: DiagramItem[] }
+  diagramsByFolderId: { [folderId: number]: DiagramItem[] },
+  isDataLoaded: boolean,
+  loadedFolders: number[]
 ): number | null => {
   if (selectedDiagramId === null) return null;
+  
+  // If data isn't fully loaded or no folders have been loaded yet, trust the localStorage value
+  if (!isDataLoaded || loadedFolders.length === 0) {
+    return selectedDiagramId;
+  }
   
   // Check if the selected diagram exists in any folder
   for (const diagrams of Object.values(diagramsByFolderId)) {
@@ -147,9 +163,14 @@ const validateSelectedDiagram = (
     }
   }
   
-  // If not found, clear the selection
-  localStorage.removeItem('selectedDiagramId');
-  return null;
+  // If we've loaded all folders and still can't find the diagram, only then clear the selection
+  if (loadedFolders.length === Object.keys(diagramsByFolderId).length) {
+    localStorage.removeItem('selectedDiagramId');
+    return null;
+  }
+  
+  // If we haven't loaded all folders yet, keep the selection
+  return selectedDiagramId;
 };
 
 // Helper function to normalize folder data
@@ -248,8 +269,15 @@ function diagramReducer(state: DiagramState, action: DiagramAction): DiagramStat
       const { folders, folderHierarchy } = normalizeFolderData(action.payload);
       const flattenedFolders = flattenFolderHierarchy(folders, folderHierarchy);
       
+      // Mark that we now have data from the backend
+      const isDataLoaded = true;
+      
       // Validate expanded folders against the new folders
-      const validExpandedFolders = validateExpandedFolders(state.expandedFolders, folders);
+      const validExpandedFolders = validateExpandedFolders(
+        state.expandedFolders, 
+        folders,
+        isDataLoaded
+      );
       
       // If any folders were removed, update localStorage
       if (validExpandedFolders.length !== state.expandedFolders.length) {
@@ -269,7 +297,12 @@ function diagramReducer(state: DiagramState, action: DiagramAction): DiagramStat
       });
       
       // Validate selected diagram
-      const validSelectedDiagram = validateSelectedDiagram(state.selectedDiagramId, validDiagramsByFolderId);
+      const validSelectedDiagram = validateSelectedDiagram(
+        state.selectedDiagramId, 
+        validDiagramsByFolderId,
+        isDataLoaded,
+        validLoadedFolders
+      );
       
       return {
         ...state,
@@ -279,7 +312,8 @@ function diagramReducer(state: DiagramState, action: DiagramAction): DiagramStat
         expandedFolders: validExpandedFolders,
         loadedFolders: validLoadedFolders,
         diagramsByFolderId: validDiagramsByFolderId,
-        selectedDiagramId: validSelectedDiagram
+        selectedDiagramId: validSelectedDiagram,
+        dataLoaded: isDataLoaded
       };
     }
 
@@ -467,8 +501,12 @@ function diagramReducer(state: DiagramState, action: DiagramAction): DiagramStat
       };
       
     case 'VALIDATE_STATE': {
-      // Validate expanded folders against existing folders
-      const validExpandedFolders = validateExpandedFolders(state.expandedFolders, action.payload.folders);
+      // Only validate if we have data loaded
+      const validExpandedFolders = validateExpandedFolders(
+        state.expandedFolders, 
+        action.payload.folders,
+        state.dataLoaded
+      );
       
       // If any folders were removed, update localStorage
       if (validExpandedFolders.length !== state.expandedFolders.length) {
@@ -476,7 +514,12 @@ function diagramReducer(state: DiagramState, action: DiagramAction): DiagramStat
       }
       
       // Validate selected diagram
-      const validSelectedDiagram = validateSelectedDiagram(state.selectedDiagramId, state.diagramsByFolderId);
+      const validSelectedDiagram = validateSelectedDiagram(
+        state.selectedDiagramId, 
+        state.diagramsByFolderId,
+        state.dataLoaded,
+        state.loadedFolders
+      );
       
       return {
         ...state,
@@ -530,14 +573,17 @@ export const DiagramProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!state.folders[folderId]) {
       console.warn(`Attempted to fetch diagrams for non-existent folder ${folderId}`);
       
-      // Clean up any references to this folder
-      if (state.expandedFolders.includes(folderId)) {
-        dispatch({ type: 'TOGGLE_FOLDER_EXPANSION', payload: folderId });
-      }
-      
-      // Remove from loaded folders
-      if (state.loadedFolders.includes(folderId)) {
-        dispatch({ type: 'REMOVE_LOADED_FOLDER', payload: folderId });
+      // Only clean up references if we've loaded data from the backend
+      if (state.dataLoaded) {
+        // Clean up any references to this folder
+        if (state.expandedFolders.includes(folderId)) {
+          dispatch({ type: 'TOGGLE_FOLDER_EXPANSION', payload: folderId });
+        }
+        
+        // Remove from loaded folders
+        if (state.loadedFolders.includes(folderId)) {
+          dispatch({ type: 'REMOVE_LOADED_FOLDER', payload: folderId });
+        }
       }
       
       return;
@@ -579,20 +625,26 @@ export const DiagramProvider: React.FC<{ children: React.ReactNode }> = ({ child
           (err.message.includes('not found') || err.message.includes('404'))) {
         console.warn(`Folder ${folderId} may have been deleted, removing from state`);
         
-        // Clean up any references to this folder
-        if (state.expandedFolders.includes(folderId)) {
-          dispatch({ type: 'TOGGLE_FOLDER_EXPANSION', payload: folderId });
+        // Only clean up references if we've loaded data from the backend
+        if (state.dataLoaded) {
+          // Clean up any references to this folder
+          if (state.expandedFolders.includes(folderId)) {
+            dispatch({ type: 'TOGGLE_FOLDER_EXPANSION', payload: folderId });
+          }
+          
+          // Remove from loaded folders
+          if (state.loadedFolders.includes(folderId)) {
+            dispatch({ type: 'REMOVE_LOADED_FOLDER', payload: folderId });
+          }
+          
+          // Refresh folders to get the latest structure
+          fetchFolders();
+          
+          dispatch({ type: 'SET_ERROR', payload: `Folder structure has changed. Refreshing data.` });
+        } else {
+          // If data isn't loaded yet, just show a generic error
+          dispatch({ type: 'SET_ERROR', payload: `Failed to load diagrams for folder ${folderId}` });
         }
-        
-        // Remove from loaded folders
-        if (state.loadedFolders.includes(folderId)) {
-          dispatch({ type: 'REMOVE_LOADED_FOLDER', payload: folderId });
-        }
-        
-        // Refresh folders to get the latest structure
-        fetchFolders();
-        
-        dispatch({ type: 'SET_ERROR', payload: `Folder structure has changed. Refreshing data.` });
       } else {
         dispatch({ type: 'SET_ERROR', payload: `Failed to load diagrams for folder ${folderId}` });
       }

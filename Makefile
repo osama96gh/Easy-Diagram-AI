@@ -1,4 +1,4 @@
-# Makefile for Diagmarm Builder
+# Makefile for Easy Diagram AI
 
 # Variables
 PYTHON := python3
@@ -118,7 +118,7 @@ clean:
 # Help
 .PHONY: help
 help:
-	@echo "Makefile for Diagmarm Builder"
+	@echo "Makefile for Easy Diagram AI"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  all            : Setup and run the application (default)"

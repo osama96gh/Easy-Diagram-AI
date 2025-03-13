@@ -1,5 +1,5 @@
 """
-Flask server for the Diagmarm Builder application.
+Flask server for the Easy Diagram AI application.
 Provides API endpoints for AI-powered diagram modification and diagram persistence.
 """
 import os
@@ -717,7 +717,7 @@ def health_check():
     """
     Simple health check endpoint to verify the API is running.
     """
-    return jsonify({"status": "ok", "message": "Diagmarm Builder API is running"})
+    return jsonify({"status": "ok", "message": "Easy Diagram AI API is running"})
 
 
 if __name__ == "__main__":

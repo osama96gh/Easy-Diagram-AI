@@ -1,5 +1,5 @@
 """
-Database models for the Diagmarm Builder application.
+Database models for the Easy Diagram AI application.
 """
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy

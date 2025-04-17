@@ -1,13 +1,14 @@
 """
 Flask server for the Easy Diagram AI application.
 Provides API endpoints for AI-powered diagram modification and diagram persistence.
+Using Supabase as the backend database.
 """
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from langchain_service import process_diagram_request
-from models import db, Diagram, Folder
+from models import Folder, Diagram, initialize_schema, ensure_root_folder_exists, migrate_diagrams_to_root_folder
 
 # Load environment variables
 load_dotenv()
@@ -15,63 +16,21 @@ load_dotenv()
 # Create Flask app
 app = Flask(__name__)
 
-# Configure SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI", "sqlite:///diagrams.db")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Initialize database
-db.init_app(app)
-
 # Configure CORS
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000,http://localhost:3000")
 CORS(app, resources={r"/api/*": {"origins": cors_origins.split(",")}})
 
-# Function to ensure a root folder exists
-def ensure_root_folder_exists():
-    """
-    Ensures that a root folder exists in the system.
-    If no root folder exists, creates one.
-    Returns the root folder.
-    """
-    root_folder = Folder.query.filter_by(is_root=True).first()
-    
-    if not root_folder:
-        # Create a root folder
-        root_folder = Folder(
-            name="Root",
-            parent_id=None,
-            is_root=True
-        )
-        db.session.add(root_folder)
-        db.session.commit()
-        print("Created root folder with ID:", root_folder.id)
-    
-    return root_folder
-
-# Function to migrate existing diagrams to the root folder
-def migrate_diagrams_to_root_folder(root_folder_id):
-    """
-    Migrates all diagrams with no folder to the root folder.
-    """
-    diagrams_without_folder = Diagram.query.filter_by(folder_id=None).all()
-    
-    if diagrams_without_folder:
-        print(f"Migrating {len(diagrams_without_folder)} diagrams to root folder")
-        for diagram in diagrams_without_folder:
-            diagram.folder_id = root_folder_id
-        
-        db.session.commit()
-        print("Migration complete")
-
 # Create database tables if they don't exist and initialize system
 with app.app_context():
-    db.create_all()
+    # Initialize database schema
+    initialize_schema()
     
     # Ensure root folder exists
     root_folder = ensure_root_folder_exists()
     
     # Migrate existing diagrams to root folder
-    migrate_diagrams_to_root_folder(root_folder.id)
+    if root_folder:
+        migrate_diagrams_to_root_folder(root_folder.get('id'))
 
 @app.route("/api/update-diagram", methods=["POST"])
 def update_diagram_with_ai():
@@ -138,14 +97,14 @@ def get_all_diagrams():
     """
     try:
         # Get all diagrams from the database, ordered by last updated
-        diagrams = Diagram.query.order_by(Diagram.last_updated.desc()).all()
+        diagrams = Diagram.get_all()
         
         # Return a simplified version with just id, name, and last_updated
         result = [
             {
-                "id": diagram.id,
-                "name": diagram.name or f"Untitled Diagram {diagram.id}",
-                "last_updated": diagram.last_updated.isoformat() if diagram.last_updated else None
+                "id": diagram.get('id'),
+                "name": diagram.get('name') or f"Untitled Diagram {diagram.get('id')}",
+                "last_updated": diagram.get('last_updated')
             }
             for diagram in diagrams
         ]
@@ -177,10 +136,10 @@ def get_diagram():
     """
     try:
         # Get the latest diagram from the database
-        latest_diagram = Diagram.query.order_by(Diagram.last_updated.desc()).first()
+        latest_diagram = Diagram.get_latest()
         
         if latest_diagram:
-            return jsonify(latest_diagram.to_dict())
+            return jsonify(Diagram.to_dict(latest_diagram))
         else:
             return jsonify({"content": None})
             
@@ -226,28 +185,17 @@ def create_diagram():
         if not content:
             return jsonify({"error": "Invalid request. Empty content."}), 400
             
-        # If folder_id is not provided, use the root folder
-        if folder_id is None:
-            root_folder = Folder.query.filter_by(is_root=True).first()
-            if not root_folder:
-                # This should not happen as we ensure a root folder exists at startup
-                root_folder = ensure_root_folder_exists()
-            folder_id = root_folder.id
-        else:
-            # Verify the folder exists
-            folder = Folder.query.get(folder_id)
+        # If folder_id is provided, verify the folder exists
+        if folder_id:
+            folder = Folder.get(folder_id)
             if not folder:
                 return jsonify({"error": f"Folder with id {folder_id} not found"}), 404
             
         # Create a new diagram
-        new_diagram = Diagram(content=content, name=name, folder_id=folder_id)
-        
-        # Save to database
-        db.session.add(new_diagram)
-        db.session.commit()
+        new_diagram = Diagram.create(content, name, folder_id)
         
         # Return the saved diagram
-        return jsonify(new_diagram.to_dict())
+        return jsonify(Diagram.to_dict(new_diagram))
         
     except Exception as e:
         print(f"Error creating diagram: {str(e)}")
@@ -269,12 +217,12 @@ def get_diagram_by_id(diagram_id):
     """
     try:
         # Get the diagram from the database
-        diagram = Diagram.query.get(diagram_id)
+        diagram = Diagram.get(diagram_id)
         
         if not diagram:
             return jsonify({"error": f"Diagram with id {diagram_id} not found"}), 404
             
-        return jsonify(diagram.to_dict())
+        return jsonify(Diagram.to_dict(diagram))
             
     except Exception as e:
         print(f"Error retrieving diagram: {str(e)}")
@@ -302,7 +250,7 @@ def update_diagram(diagram_id):
     """
     try:
         # Get the diagram from the database
-        diagram = Diagram.query.get(diagram_id)
+        diagram = Diagram.get(diagram_id)
         
         if not diagram:
             return jsonify({"error": f"Diagram with id {diagram_id} not found"}), 404
@@ -322,15 +270,14 @@ def update_diagram(diagram_id):
             return jsonify({"error": "Invalid request. Empty content."}), 400
             
         # Update the diagram
-        diagram.content = content
+        update_data = {"content": content}
         if name:
-            diagram.name = name
+            update_data["name"] = name
             
-        # Save changes to database
-        db.session.commit()
+        updated_diagram = Diagram.update(diagram_id, update_data)
         
         # Return the updated diagram
-        return jsonify(diagram.to_dict())
+        return jsonify(Diagram.to_dict(updated_diagram))
         
     except Exception as e:
         print(f"Error updating diagram: {str(e)}")
@@ -355,14 +302,13 @@ def delete_diagram(diagram_id):
     """
     try:
         # Get the diagram from the database
-        diagram = Diagram.query.get(diagram_id)
+        diagram = Diagram.get(diagram_id)
         
         if not diagram:
             return jsonify({"error": f"Diagram with id {diagram_id} not found"}), 404
             
         # Delete the diagram
-        db.session.delete(diagram)
-        db.session.commit()
+        Diagram.delete(diagram_id)
         
         # Return success response
         return jsonify({
@@ -403,7 +349,7 @@ def get_folders():
     """
     try:
         # Get the root folder
-        root_folder = Folder.query.filter_by(is_root=True).first()
+        root_folder = Folder.get_root()
         
         if not root_folder:
             # This should not happen as we ensure a root folder exists at startup
@@ -422,17 +368,17 @@ def build_folder_hierarchy(folder):
     Helper function to build a folder hierarchy recursively.
     """
     folder_dict = {
-        'id': folder.id,
-        'name': folder.name,
-        'parent_id': folder.parent_id,
-        'is_root': folder.is_root,
-        'created_at': folder.created_at.isoformat() if folder.created_at else None,
-        'last_updated': folder.last_updated.isoformat() if folder.last_updated else None,
+        'id': folder.get('id'),
+        'name': folder.get('name'),
+        'parent_id': folder.get('parent_id'),
+        'is_root': folder.get('is_root'),
+        'created_at': folder.get('created_at'),
+        'last_updated': folder.get('last_updated'),
         'children': []
     }
     
     # Get all direct children
-    children = Folder.query.filter_by(parent_id=folder.id).all()
+    children = Folder.get_children(folder.get('id'))
     
     # Recursively build hierarchy for each child
     for child in children:
@@ -484,21 +430,17 @@ def create_folder():
             
         # If parent_id is provided, check if the parent folder exists
         if parent_id is not None:
-            parent_folder = Folder.query.get(parent_id)
+            parent_folder = Folder.get(parent_id)
             if not parent_folder:
                 return jsonify({"error": f"Parent folder with id {parent_id} not found"}), 404
                 
         # Create a new folder
-        new_folder = Folder(name=name, parent_id=parent_id, is_root=is_root)
-        
-        # Save to database
-        db.session.add(new_folder)
-        db.session.commit()
+        new_folder = Folder.create(name, parent_id, is_root)
         
         # Return the saved folder
-        return jsonify(new_folder.to_dict())
+        return jsonify(Folder.to_dict(new_folder))
     except ValueError as e:
-        # Handle the specific error from the event listener
+        # Handle the specific error from the model
         print(f"Error creating folder: {str(e)}")
         return jsonify({"error": str(e)}), 400
     except Exception as e:
@@ -528,7 +470,7 @@ def update_folder(folder_id):
     """
     try:
         # Get the folder from the database
-        folder = Folder.query.get(folder_id)
+        folder = Folder.get(folder_id)
         
         if not folder:
             return jsonify({"error": f"Folder with id {folder_id} not found"}), 404
@@ -540,13 +482,17 @@ def update_folder(folder_id):
         if not data:
             return jsonify({"error": "Invalid request. No data provided."}), 400
             
-        # Update the folder
+        # Create an update data dictionary
+        update_data = {}
+        
+        # Update the folder name if provided
         if "name" in data and data["name"]:
-            folder.name = data["name"]
+            update_data["name"] = data["name"]
             
+        # Update the parent_id if provided
         if "parent_id" in data:
             # Root folders cannot have a parent
-            if folder.is_root and data["parent_id"] is not None:
+            if folder.get("is_root") and data["parent_id"] is not None:
                 return jsonify({"error": "Root folder cannot have a parent"}), 400
                 
             # Prevent circular references
@@ -555,19 +501,19 @@ def update_folder(folder_id):
                 
             # Check if the new parent exists
             if data["parent_id"] is not None:
-                parent_folder = Folder.query.get(data["parent_id"])
+                parent_folder = Folder.get(data["parent_id"])
                 if not parent_folder:
                     return jsonify({"error": f"Parent folder with id {data['parent_id']} not found"}), 404
                     
-            folder.parent_id = data["parent_id"]
+            update_data["parent_id"] = data["parent_id"]
             
-        # Save changes to database
-        db.session.commit()
+        # Update the folder
+        updated_folder = Folder.update(folder_id, update_data)
         
         # Return the updated folder
-        return jsonify(folder.to_dict())
+        return jsonify(Folder.to_dict(updated_folder))
     except ValueError as e:
-        # Handle the specific error from the event listener
+        # Handle the specific error from the model
         print(f"Error updating folder: {str(e)}")
         return jsonify({"error": str(e)}), 400
     except Exception as e:
@@ -587,34 +533,23 @@ def delete_folder(folder_id):
     """
     try:
         # Get the folder from the database
-        folder = Folder.query.get(folder_id)
+        folder = Folder.get(folder_id)
         
         if not folder:
             return jsonify({"error": f"Folder with id {folder_id} not found"}), 404
             
-        # Cannot delete the root folder
-        if folder.is_root:
-            return jsonify({"error": "Cannot delete the root folder"}), 400
-            
-        # Check if the folder has children
-        children = Folder.query.filter_by(parent_id=folder_id).all()
-        if children:
-            return jsonify({"error": "Cannot delete folder with subfolders. Delete subfolders first."}), 400
-            
-        # Check if the folder contains diagrams
-        diagrams = Diagram.query.filter_by(folder_id=folder_id).all()
-        if diagrams:
-            return jsonify({"error": "Cannot delete folder containing diagrams. Move or delete diagrams first."}), 400
-            
-        # Delete the folder
-        db.session.delete(folder)
-        db.session.commit()
+        # Delete the folder (the model handles validation)
+        Folder.delete(folder_id)
         
         # Return success response
         return jsonify({
             "success": True,
             "message": f"Folder with id {folder_id} deleted successfully"
         })
+    except ValueError as e:
+        # Handle the specific error from the model
+        print(f"Error deleting folder: {str(e)}")
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         print(f"Error deleting folder: {str(e)}")
         return jsonify({"error": "Failed to delete folder"}), 500
@@ -637,20 +572,20 @@ def get_diagrams_in_folder(folder_id):
     """
     try:
         # Check if folder exists
-        folder = Folder.query.get(folder_id)
+        folder = Folder.get(folder_id)
         if not folder:
             return jsonify({"error": f"Folder with id {folder_id} not found"}), 404
                 
         # Get diagrams in the folder
-        diagrams = Diagram.query.filter_by(folder_id=folder_id).order_by(Diagram.last_updated.desc()).all()
+        diagrams = Diagram.get_by_folder(folder_id)
         
         # Return a simplified version with just id, name, last_updated, and folder_id
         result = [
             {
-                "id": diagram.id,
-                "name": diagram.name or f"Untitled Diagram {diagram.id}",
-                "last_updated": diagram.last_updated.isoformat() if diagram.last_updated else None,
-                "folder_id": diagram.folder_id
+                "id": diagram.get('id'),
+                "name": diagram.get('name') or f"Untitled Diagram {diagram.get('id')}",
+                "last_updated": diagram.get('last_updated'),
+                "folder_id": diagram.get('folder_id')
             }
             for diagram in diagrams
         ]
@@ -678,7 +613,7 @@ def move_diagram(diagram_id):
     """
     try:
         # Get the diagram from the database
-        diagram = Diagram.query.get(diagram_id)
+        diagram = Diagram.get(diagram_id)
         
         if not diagram:
             return jsonify({"error": f"Diagram with id {diagram_id} not found"}), 404
@@ -693,15 +628,12 @@ def move_diagram(diagram_id):
         folder_id = data["folder_id"]
         
         # Check if the folder exists
-        folder = Folder.query.get(folder_id)
+        folder = Folder.get(folder_id)
         if not folder:
             return jsonify({"error": f"Folder with id {folder_id} not found"}), 404
                 
         # Update the diagram's folder
-        diagram.folder_id = folder_id
-        
-        # Save changes to database
-        db.session.commit()
+        Diagram.update(diagram_id, {"folder_id": folder_id})
         
         # Return success response
         return jsonify({

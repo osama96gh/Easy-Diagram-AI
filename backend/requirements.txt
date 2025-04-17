@@ -5,3 +5,4 @@ langchain-anthropic
 python-dotenv
 supervisor
 flask-sqlalchemy
+supabase

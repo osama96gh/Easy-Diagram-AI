@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PanelProvider, usePanelContext } from '../../../contexts/PanelContext';
 import { CodeEditor, CommandBox } from '../../editor';
 import { DiagramRenderer } from '../../diagram';
 import { DiagramList } from '../../storage';
 import { apiService } from '../../../services/api';
 import { useDiagramContext } from '../../../contexts/DiagramContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import './MainLayout.css';
 
 /**
@@ -369,7 +370,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <PanelProvider>
-      <MainLayoutContent 
+      <MainLayoutContent
         code={code}
         title={title}
         diagramId={diagramId}
@@ -390,7 +391,7 @@ const MainLayout: React.FC = () => {
 };
 
 // Separate component to use the PanelContext
-const MainLayoutContent: React.FC<{
+interface MainLayoutContentProps {
   code: string;
   title: string;
   diagramId: number | null;
@@ -405,12 +406,19 @@ const MainLayoutContent: React.FC<{
   statusType: 'loading' | 'error' | 'success' | null;
   isSaving: boolean;
   lastSaved: Date | null;
-}> = (props) => {
-  const { isPanelExpanded, togglePanelExpansion } = usePanelContext();
+}
+
+const MainLayoutContent: React.FC<MainLayoutContentProps> = (props) => {
+  const { isPanelExpanded } = usePanelContext();
+  const { user, signOut } = useAuth();
   const isBottomPanelExpanded = isPanelExpanded('bottomPanel');
   
   return (
     <div className="app-container">
+      <div className="auth-header">
+        <span className="user-email">{user?.email}</span>
+        <button onClick={signOut}>Sign Out</button>
+      </div>
       <div className="main-panel">
         <CodeEditor 
           code={props.code} 

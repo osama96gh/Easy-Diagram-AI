@@ -1,6 +1,30 @@
 import axios from 'axios';
+import { supabase } from './supabase';
 
-const API_BASE_URL = 'http://127.0.0.1:5000';
+const API_HOST = process.env.REACT_APP_API_HOST || '127.0.0.1';
+const API_PORT = process.env.REACT_APP_API_PORT || '5000';
+const API_BASE_URL = `http://${API_HOST}:${API_PORT}`;
+
+console.log('API configuration:', { API_HOST, API_PORT, API_BASE_URL });
+
+// Create an axios instance with auth interceptor
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add auth interceptor
+axiosInstance.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
 /**
  * Interfaces for folder and diagram data
@@ -42,7 +66,7 @@ export const apiService = {
     try {
       console.log('Retrieving all diagrams from API');
       
-      const response = await axios.get(`${API_BASE_URL}/api/diagrams`);
+      const response = await axiosInstance.get('/api/diagrams');
       
       console.log('API response for all diagrams:', response.data);
       
@@ -69,7 +93,7 @@ export const apiService = {
     try {
       console.log(`Retrieving diagram ${id} from API`);
       
-      const response = await axios.get(`${API_BASE_URL}/api/diagram/${id}`);
+      const response = await axiosInstance.get(`/api/diagram/${id}`);
       
       console.log('API response for diagram:', response.data);
       
@@ -94,7 +118,7 @@ export const apiService = {
     try {
       console.log('Retrieving latest diagram from API');
       
-      const response = await axios.get(`${API_BASE_URL}/api/diagram`);
+      const response = await axiosInstance.get('/api/diagram');
       
       console.log('API response for latest diagram:', response.data);
       
@@ -127,7 +151,7 @@ export const apiService = {
     try {
       console.log('Creating new diagram in API:', { content, name });
       
-      const response = await axios.post(`${API_BASE_URL}/api/diagram`, {
+      const response = await axiosInstance.post('/api/diagram', {
         content,
         name
       });
@@ -159,7 +183,7 @@ export const apiService = {
     try {
       console.log('Updating diagram in API:', { id, content, name });
       
-      const response = await axios.put(`${API_BASE_URL}/api/diagram/${id}`, {
+      const response = await axiosInstance.put(`/api/diagram/${id}`, {
         content,
         name
       });
@@ -189,7 +213,7 @@ export const apiService = {
     try {
       console.log(`Deleting diagram ${id} from API`);
       
-      const response = await axios.delete(`${API_BASE_URL}/api/diagram/${id}`);
+      const response = await axiosInstance.delete(`/api/diagram/${id}`);
       
       console.log('API response for diagram deletion:', response.data);
       
@@ -216,7 +240,7 @@ export const apiService = {
     try {
       console.log('Sending request to API:', { currentCode, userRequest });
       
-      const response = await axios.post(`${API_BASE_URL}/api/update-diagram`, {
+      const response = await axiosInstance.post('/api/update-diagram', {
         current_code: currentCode,
         user_request: userRequest
       });
@@ -250,7 +274,7 @@ export const apiService = {
   checkAPIAvailability: async (): Promise<boolean> => {
     try {
       console.log('Checking API health at:', `${API_BASE_URL}/api/health`);
-      const response = await axios.get(`${API_BASE_URL}/api/health`);
+      const response = await axiosInstance.get('/api/health');
       console.log('API health response:', response.data);
       return response.status === 200;
     } catch (error) {
@@ -271,7 +295,7 @@ export const apiService = {
     try {
       console.log('Retrieving folder hierarchy from API');
       
-      const response = await axios.get(`${API_BASE_URL}/api/folders`);
+      const response = await axiosInstance.get('/api/folders');
       
       console.log('API response for folders:', response.data);
       
@@ -300,7 +324,7 @@ export const apiService = {
     try {
       console.log('Creating new folder in API:', { name, parentId, isRoot });
       
-      const response = await axios.post(`${API_BASE_URL}/api/folder`, {
+      const response = await axiosInstance.post('/api/folder', {
         name,
         parent_id: parentId,
         is_root: isRoot
@@ -338,7 +362,7 @@ export const apiService = {
         data.parent_id = parentId;
       }
       
-      const response = await axios.put(`${API_BASE_URL}/api/folder/${id}`, data);
+      const response = await axiosInstance.put(`/api/folder/${id}`, data);
       
       console.log('API response for folder update:', response.data);
       
@@ -365,7 +389,7 @@ export const apiService = {
     try {
       console.log(`Deleting folder ${id} from API`);
       
-      const response = await axios.delete(`${API_BASE_URL}/api/folder/${id}`);
+      const response = await axiosInstance.delete(`/api/folder/${id}`);
       
       console.log('API response for folder deletion:', response.data);
       
@@ -397,7 +421,7 @@ export const apiService = {
     try {
       console.log(`Retrieving diagrams in folder ${folderId} from API`);
       
-      const response = await axios.get(`${API_BASE_URL}/api/folder/${folderId}/diagrams`);
+      const response = await axiosInstance.get(`/api/folder/${folderId}/diagrams`);
       
       console.log('API response for diagrams in folder:', response.data);
       
@@ -426,7 +450,7 @@ export const apiService = {
     try {
       console.log('Creating new diagram in folder in API:', { content, name, folderId });
       
-      const response = await axios.post(`${API_BASE_URL}/api/diagram`, {
+      const response = await axiosInstance.post('/api/diagram', {
         content,
         name,
         folder_id: folderId
@@ -458,7 +482,7 @@ export const apiService = {
     try {
       console.log(`Moving diagram ${diagramId} to folder ${folderId}`);
       
-      const response = await axios.put(`${API_BASE_URL}/api/diagram/${diagramId}/move`, {
+      const response = await axiosInstance.put(`/api/diagram/${diagramId}/move`, {
         folder_id: folderId
       });
       

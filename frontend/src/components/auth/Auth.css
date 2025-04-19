@@ -1,0 +1,128 @@
+.auth-container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #333;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.auth-form-container {
+  margin-top: 20px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.auth-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.auth-button:hover {
+  background-color: #0056b3;
+}
+
+.auth-button[data-variant="secondary"] {
+  background-color: #6c757d;
+  margin-top: 8px;
+}
+
+.auth-button[data-variant="secondary"]:hover {
+  background-color: #5a6268;
+}
+
+.success-message {
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  color: #155724;
+}
+
+.error-message {
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+}
+
+/* Supabase Auth UI overrides */
+.supabase-auth-ui_ui-container {
+  width: 100%;
+  max-width: none;
+}
+
+.supabase-auth-ui_ui-divider {
+  margin: 20px 0;
+  border-color: #dee2e6;
+}
+
+.supabase-auth-ui_ui-label {
+  color: #495057;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.supabase-auth-ui_ui-anchor {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.supabase-auth-ui_ui-anchor:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.supabase-auth-ui_ui-message {
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.supabase-auth-ui_ui-message[data-variant="error"] {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.supabase-auth-ui_ui-message[data-variant="success"] {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}

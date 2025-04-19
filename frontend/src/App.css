@@ -1,3 +1,14 @@
+/* Loading styles */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-size: 1.2rem;
+}
+
 /* Reset and base styles */
 * {
   margin: 0;

@@ -1,9 +1,7 @@
-/* MainLayout styles */
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100%;
   overflow: hidden;
 }
 
@@ -13,32 +11,40 @@
   overflow: hidden;
 }
 
-/* Bottom panel styling */
-.command-box {
-  height: 150px;
-  min-height: 150px;
-  border-top: 1px solid #ddd;
-  background-color: #f9f9f9;
-  transition: height 0.3s ease, min-height 0.3s ease;
-  position: relative;
+.bottom-panel {
+  height: 200px;
+  transition: height 0.3s ease;
 }
 
-/* When the bottom panel is collapsed */
-.command-box.collapsed {
+.bottom-panel.collapsed {
   height: 40px;
-  min-height: 40px;
-  border-top: 1px solid #ddd;
-  overflow: hidden;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .main-panel {
-    flex-direction: column;
-  }
-  
-  .command-box {
-    height: 120px;
-    min-height: 120px;
-  }
+.auth-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.auth-header button {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.auth-header button:hover {
+  background-color: #c82333;
+}
+
+.user-email {
+  margin-right: 16px;
+  line-height: 32px;
+  color: #6c757d;
 }
